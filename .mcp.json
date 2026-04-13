@@ -1,0 +1,55 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "google-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-pse-mcp"
+      ],
+      "env": {
+        "GOOGLE_API_KEY": "AIzaSyAVQH3w8gvoIM48QzLialIf_ScqVApxGUU",
+        "GOOGLE_SEARCH_ENGINE_ID": "545c55d2e2d45405a"
+      }
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "env": {}
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "shrimp-task-manager": {
+      "command": "node",
+      "args": ["C:/Users/wd/cld/dicegame/mcp-shrimp-task-manager/dist/index.js"],
+      "env": {
+        "DATA_DIR": "C:/Users/wd/cld/dicegame/shrimp_data",
+        "TEMPLATES_USE": "en",
+        "ENABLE_GUI": "false"
+      }
+    }
+  }
+}

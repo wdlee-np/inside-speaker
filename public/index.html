@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPL 광고 관리 시스템</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">PPL 광고 관리</div>
+      <nav class="site-nav">
+        <a href="#campaigns" class="nav-link" data-page="campaigns">캠페인 관리</a>
+        <a href="#reports" class="nav-link" data-page="reports">캠페인 리포트</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div id="app">
+      <div class="loading-spinner">로딩 중...</div>
+    </div>
+  </main>
+
+  <!-- 소재 등록/수정 모달 -->
+  <div id="creative-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">소재 등록</h3>
+        <button class="modal-close" onclick="closeCreativeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="creative-form">
+          <input type="hidden" id="creative-id" value="">
+          <input type="hidden" id="creative-campaign-id" value="">
+          <div class="form-group">
+            <label>영상 제목 <span class="required">*</span></label>
+            <input type="text" id="c-video-title" maxlength="100" placeholder="영상 제목 입력" required>
+          </div>
+          <div class="form-group">
+            <label>Mux Playback ID <span class="required">*</span></label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="c-mux-id" placeholder="Mux Playback ID 입력" required style="flex:1;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="previewMuxVideo()">미리보기</button>
+            </div>
+            <div id="mux-preview" style="display:none;margin-top:10px;">
+              <video id="mux-preview-video" controls style="width:100%;border-radius:8px;background:#000;max-height:240px;"></video>
+              <p id="mux-preview-hint" style="font-size:12px;color:#64748b;margin-top:4px;"></p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>태그</label>
+            <input type="text" id="c-tags" placeholder="태그1|태그2|태그3 (파이프로 구분)">
+          </div>
+          <div class="form-group">
+            <label>퀴즈 문제 <span class="required">*</span></label>
+            <textarea id="c-quiz-question" rows="3" placeholder="퀴즈 문제 입력 (HTML 태그 허용)" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>정답 <span class="required">*</span></label>
+            <input type="text" id="c-quiz-answer" placeholder="정답 입력" required>
+          </div>
+          <div class="form-group">
+            <label>오답 리스트 <span class="required">*</span> <small>(줄바꿈으로 구분, 최소 1개)</small></label>
+            <textarea id="c-quiz-wrong" rows="3" placeholder="오답1&#10;오답2&#10;오답3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>상태</label>
+            <select id="c-status">
+              <option value="active">활성</option>
+              <option value="inactive">비활성</option>
+            </select>
+          </div>
+          <div id="creative-modal-error" class="form-error" style="display:none;"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCreativeModal()">취소</button>
+            <button type="submit" class="btn btn-primary" id="creative-submit-btn">저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/campaigns.js"></script>
+  <script src="/js/reports.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

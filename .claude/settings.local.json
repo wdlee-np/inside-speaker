@@ -1,0 +1,27 @@
+{
+  "env": {
+    "ENABLE_TOOL_SEARCH": "auto"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebSearch",
+      "WebFetch(*)",
+      "mcp__playwright__*",
+      "mcp__google-search__*",
+      "mcp__shadcn__*",
+      "mcp__shrimp-task-manager__*",
+      "mcp__sequential-thinking__*",
+      "mcp__context7__*",
+      "Skill(commit)",
+      "Bash(mkdir -p C:/Users/wd/cld/dicegame/shrimp_data)",
+      "Bash(mkdir -p C:/Users/wd/cld/dicegame/.claude/agent-memory)"
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}

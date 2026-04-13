@@ -1,0 +1,6 @@
+node_modules/
+data/*.csv
+mcp-shrimp-task-manager/
+shrimp_data/
+.env
+.env.local
