@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('dotenv'\\)\")",
+      "Bash(npm install *)",
+      "Bash(npx tsx *)",
+      "Bash(git rm *)",
+      "Bash(git add *)"
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "playwright",
+    "google-search",
+    "context7",
+    "sequential-thinking",
+    "shadcn",
+    "shrimp-task-manager"
+  ]
+}

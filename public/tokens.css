@@ -1,0 +1,137 @@
+/* ============================================
+   INSIDE COMPANY — Design Tokens
+   Shared color/type/spacing tokens
+   ============================================ */
+
+/* Pretendard (Korean modern sans) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---------- Brand / S Keywords (sampled from CI logo) ---------- */
+  /* Primary: Teal — the dominant color of the S logo */
+  --brand-teal-50:  #eef8f7;
+  --brand-teal-100: #d4ede9;
+  --brand-teal-200: #a8dbd4;
+  --brand-teal-300: #73c2b8;
+  --brand-teal-400: #3aa99c;
+  --brand-teal-500: #1a8e82;  /* Primary */
+  --brand-teal-600: #14756b;
+  --brand-teal-700: #0f5c54;
+  --brand-teal-800: #0b443e;
+  --brand-teal-900: #082e2a;
+
+  /* S Keywords — 6 secondary accents, tuned to match logo illustration */
+  --s-service:         #d94a3d;   /* Service — warm red */
+  --s-service-soft:    #fbeae7;
+  --s-sales:           #8aa660;   /* Sales — olive green */
+  --s-sales-soft:      #eef2e4;
+  --s-specialist:      #e89a6c;   /* Specialist — peach/coral */
+  --s-specialist-soft: #fbece0;
+  --s-standard:        #e87f52;   /* Standardization — orange */
+  --s-standard-soft:   #fbe6d9;
+  --s-skillup:         #4a90c2;   /* Skill-up — blue */
+  --s-skillup-soft:    #e3eef6;
+  --s-success:         #2fa691;   /* Success — teal-green (primary family) */
+  --s-success-soft:    #dff0ec;
+
+  /* ---------- Neutral — warm toned ---------- */
+  --neutral-0:   #ffffff;
+  --neutral-25:  #fbfaf7;  /* warm ivory */
+  --neutral-50:  #f7f5f0;
+  --neutral-100: #efece5;
+  --neutral-200: #e4e0d6;
+  --neutral-300: #cfc9bb;
+  --neutral-400: #a8a295;
+  --neutral-500: #807a6e;
+  --neutral-600: #5f5a52;
+  --neutral-700: #43403a;
+  --neutral-800: #2c2a26;
+  --neutral-900: #1a1916;
+
+  /* Cooler neutral variant for Professional direction */
+  --cool-0:   #ffffff;
+  --cool-25:  #fafbfc;
+  --cool-50:  #f4f6f8;
+  --cool-100: #eceff3;
+  --cool-200: #dbe0e7;
+  --cool-300: #bac1cc;
+  --cool-400: #8b94a3;
+  --cool-500: #5d6575;
+  --cool-600: #434a58;
+  --cool-700: #2e343f;
+  --cool-800: #1c2029;
+  --cool-900: #0e1117;
+
+  /* ---------- Semantic ---------- */
+  --semantic-info:    #4a90c2;
+  --semantic-success: #2fa691;
+  --semantic-warning: #e8a33c;
+  --semantic-error:   #d94a3d;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  /* ---------- Shadow (warm, soft) ---------- */
+  --shadow-xs: 0 1px 2px rgba(43, 40, 35, 0.04);
+  --shadow-sm: 0 1px 3px rgba(43, 40, 35, 0.06), 0 1px 2px rgba(43, 40, 35, 0.04);
+  --shadow-md: 0 4px 10px rgba(43, 40, 35, 0.06), 0 2px 4px rgba(43, 40, 35, 0.04);
+  --shadow-lg: 0 10px 24px rgba(43, 40, 35, 0.08), 0 4px 8px rgba(43, 40, 35, 0.04);
+  --shadow-xl: 0 20px 40px rgba(43, 40, 35, 0.10), 0 8px 16px rgba(43, 40, 35, 0.05);
+  --shadow-inner: inset 0 1px 2px rgba(43, 40, 35, 0.06);
+
+  /* ---------- Typography ---------- */
+  --font-kr: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif;
+  --font-en: 'Inter', 'Pretendard', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Font sizes (px, based on 16px root) */
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-md:   18px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  30px;
+  --text-3xl:  36px;
+  --text-4xl:  48px;
+  --text-5xl:  60px;
+  --text-6xl:  72px;
+
+  --leading-tight:  1.2;
+  --leading-snug:   1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: -0.005em;
+  --tracking-wide: 0.04em;
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasize: cubic-bezier(0.3, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+}

@@ -1,20 +1,9 @@
 {
-  "name": "ppl-app",
-  "version": "1.0.0",
-  "description": "PPL 광고 관리 데모 시스템",
-  "main": "server.js",
+  "name": "inside-speakers",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "seed": "node scripts/seed-reports.js",
-    "test:e2e": "npx playwright test"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.103.0",
-    "dotenv": "^16.6.1",
-    "express": "^4.18.0"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.59.1"
+    "dev": "npx serve public -p 3000",
+    "start": "npx serve public -p 3000"
   }
 }

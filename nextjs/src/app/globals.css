@@ -1,0 +1,294 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand Teal ─────────────────────────────── */
+  --color-brand-teal-50:  #eef8f7;
+  --color-brand-teal-100: #d4ede9;
+  --color-brand-teal-200: #a8dbd4;
+  --color-brand-teal-300: #73c2b8;
+  --color-brand-teal-400: #3aa99c;
+  --color-brand-teal-500: #1a8e82;
+  --color-brand-teal-600: #14756b;
+  --color-brand-teal-700: #0f5c54;
+  --color-brand-teal-800: #0b443e;
+  --color-brand-teal-900: #082e2a;
+
+  /* ── App semantic ───────────────────────────── */
+  --color-bg:          #faf9f6;
+  --color-surface:     #ffffff;
+  --color-ink:         #141311;
+  --color-ink-soft:    #3a3834;
+  --color-ink-muted:   #86827a;
+  --color-line:        #e7e3da;
+  --color-line-strong: #cfc9bb;
+  --color-accent:      #14756b;
+  --color-accent-soft: #eef8f7;
+
+  /* ── Neutral warm ───────────────────────────── */
+  --color-neutral-0:   #ffffff;
+  --color-neutral-25:  #fbfaf7;
+  --color-neutral-50:  #f7f5f0;
+  --color-neutral-100: #efece5;
+  --color-neutral-200: #e4e0d6;
+  --color-neutral-300: #cfc9bb;
+  --color-neutral-400: #a8a295;
+  --color-neutral-500: #807a6e;
+  --color-neutral-600: #5f5a52;
+  --color-neutral-700: #43403a;
+  --color-neutral-800: #2c2a26;
+  --color-neutral-900: #1a1916;
+
+  /* ── Semantic status ────────────────────────── */
+  --color-semantic-info:    #4a90c2;
+  --color-semantic-success: #2fa691;
+  --color-semantic-warning: #e8a33c;
+  --color-semantic-error:   #d94a3d;
+
+  /* ── Typography ─────────────────────────────── */
+  --font-kr:    "Pretendard", -apple-system, "Malgun Gothic", sans-serif;
+  --font-en:    "Inter", "Pretendard", system-ui, sans-serif;
+  --font-serif: "Fraunces", "Noto Serif KR", "Times New Roman", serif;
+  --font-mono:  "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  /* ── Radius ─────────────────────────────────── */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-2xl:  28px;
+  --radius-full: 9999px;
+
+  /* ── Shadow ─────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(43, 40, 35, 0.04);
+  --shadow-sm: 0 1px 3px rgba(43, 40, 35, 0.06), 0 1px 2px rgba(43, 40, 35, 0.04);
+  --shadow-md: 0 4px 10px rgba(43, 40, 35, 0.06), 0 2px 4px rgba(43, 40, 35, 0.04);
+  --shadow-lg: 0 10px 24px rgba(43, 40, 35, 0.08), 0 4px 8px rgba(43, 40, 35, 0.04);
+  --shadow-xl: 0 20px 40px rgba(43, 40, 35, 0.10), 0 8px 16px rgba(43, 40, 35, 0.05);
+}
+
+/* ── Google Fonts ────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500;1,9..144,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap");
+
+/* ── Local Pretendard ────────────────────────── */
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 100; font-display: swap; src: url("/fonts/Pretendard-Thin.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 200; font-display: swap; src: url("/fonts/Pretendard-ExtraLight.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 300; font-display: swap; src: url("/fonts/Pretendard-Light.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/Pretendard-Regular.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/Pretendard-Medium.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/Pretendard-SemiBold.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/Pretendard-Bold.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 800; font-display: swap; src: url("/fonts/Pretendard-ExtraBold.otf") format("opentype"); }
+@font-face { font-family: "Pretendard"; font-style: normal; font-weight: 900; font-display: swap; src: url("/fonts/Pretendard-Black.otf") format("opentype"); }
+
+/* ── Layout constants ────────────────────────── */
+:root {
+  --page-max:      1440px;
+  --nav-h:         72px;
+  --tabbar-height: 56px;
+
+  /* 구 CSS 변수명 호환성 (tokens.css / app.css 마크업 이식용) */
+  --bg:           var(--color-bg);
+  --surface:      var(--color-surface);
+  --ink:          var(--color-ink);
+  --ink-soft:     var(--color-ink-soft);
+  --ink-muted:    var(--color-ink-muted);
+  --line:         var(--color-line);
+  --line-strong:  var(--color-line-strong);
+  --accent:       var(--color-accent);
+  --accent-soft:  var(--color-accent-soft);
+
+  --brand-teal-50:  var(--color-brand-teal-50);
+  --brand-teal-100: var(--color-brand-teal-100);
+  --brand-teal-200: var(--color-brand-teal-200);
+  --brand-teal-300: var(--color-brand-teal-300);
+  --brand-teal-400: var(--color-brand-teal-400);
+  --brand-teal-500: var(--color-brand-teal-500);
+  --brand-teal-600: var(--color-brand-teal-600);
+  --brand-teal-700: var(--color-brand-teal-700);
+  --brand-teal-800: var(--color-brand-teal-800);
+  --brand-teal-900: var(--color-brand-teal-900);
+
+  --neutral-0:   var(--color-neutral-0);
+  --neutral-25:  var(--color-neutral-25);
+  --neutral-50:  var(--color-neutral-50);
+  --neutral-100: var(--color-neutral-100);
+  --neutral-200: var(--color-neutral-200);
+  --neutral-300: var(--color-neutral-300);
+  --neutral-400: var(--color-neutral-400);
+  --neutral-500: var(--color-neutral-500);
+  --neutral-600: var(--color-neutral-600);
+  --neutral-700: var(--color-neutral-700);
+  --neutral-800: var(--color-neutral-800);
+  --neutral-900: var(--color-neutral-900);
+}
+
+/* ── Dark mode overrides ─────────────────────── */
+body.theme-dark {
+  --color-bg:          #0e0d0c;
+  --color-surface:     #181715;
+  --color-ink:         #f5f2eb;
+  --color-ink-soft:    #cfc9bb;
+  --color-ink-muted:   #86827a;
+  --color-line:        #2a2723;
+  --color-line-strong: #3a3631;
+  --color-accent:      #73c2b8;
+  --color-accent-soft: rgba(58, 169, 156, 0.12);
+}
+
+/* ── Reset & base ────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font-kr);
+  color: var(--color-ink);
+  background: var(--color-bg);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+ul { list-style: none; }
+
+/* ── Typography helpers ──────────────────────── */
+.serif {
+  font-family: var(--font-serif);
+  font-feature-settings: "liga", "kern";
+  letter-spacing: -0.01em;
+}
+
+.italic-quote {
+  font-family: "Fraunces", "Noto Serif KR", serif;
+  font-style: italic;
+  font-weight: 300;
+  font-feature-settings: "liga", "kern", "ss01";
+  letter-spacing: -0.015em;
+}
+.italic-quote :lang(ko),
+.italic-quote .ko {
+  font-family: "Noto Serif KR", serif;
+  font-style: normal;
+  font-weight: 300;
+  display: inline-block;
+  transform: skewX(-7deg);
+  transform-origin: 0 80%;
+  padding-right: 0.18em;
+}
+
+.en   { font-family: var(--font-en); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.eyebrow {
+  font-family: var(--font-en);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.divider { height: 1px; background: var(--color-line); width: 100%; }
+
+/* ── Portrait placeholder ────────────────────── */
+.portrait-ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, var(--_ph-a, #cfc9bb) 0%, var(--_ph-b, #86827a) 100%);
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: flex-end;
+  isolation: isolate;
+}
+.portrait-ph::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.portrait-ph .ph-label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  z-index: 1;
+}
+.portrait-ph .ph-initials {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(48px, 14%, 160px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  padding: 0 0 22px 22px;
+  color: rgba(255,255,255,0.92);
+  z-index: 1;
+}
+
+/* ── Buttons ─────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  border-radius: 0;
+  border: 1px solid transparent;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.btn-primary { background: var(--color-ink); color: #fff; }
+.btn-primary:hover { background: var(--color-accent); }
+.btn-ghost { background: transparent; color: var(--color-ink); border-color: var(--color-line-strong); }
+.btn-ghost:hover { border-color: var(--color-ink); }
+.btn-accent { background: var(--color-accent); color: #fff; }
+.btn-accent:hover { background: var(--color-brand-teal-700); }
+.btn-sm { padding: 9px 14px; font-size: 12px; gap: 6px; }
+
+/* ── Page container ──────────────────────────── */
+.wrap {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+@media (max-width: 780px) {
+  .wrap { padding: 0 20px; }
+}
+
+/* ── Utilities ───────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 700ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes fadeInUp {
+  to { opacity: 1; transform: none; }
+}

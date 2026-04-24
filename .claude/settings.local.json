@@ -20,7 +20,13 @@
       "mcp__context7__*",
       "Skill(commit)",
       "Bash(mkdir -p C:/Users/wd/cld/dicegame/shrimp_data)",
-      "Bash(mkdir -p C:/Users/wd/cld/dicegame/.claude/agent-memory)"
+      "Bash(mkdir -p C:/Users/wd/cld/dicegame/.claude/agent-memory)",
+      "Bash(mkdir -p ~/.claude/channels/telegram)",
+      "Read(//c/Users/wd/.claude/channels/**)",
+      "Bash(echo '')",
+      "Bash(echo '# bun')",
+      "Bash(echo 'export PATH=\"$PATH:/c/Users/wd/.bun/bin\"')",
+      "Bash(echo '[ -s \"/c/Users/wd/.bun/_bun\" ] && source \"/c/Users/wd/.bun/_bun\"')"
     ]
   },
   "enableAllProjectMcpServers": true

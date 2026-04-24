@@ -1,0 +1,184 @@
+/* ============================================================
+   CAA · Inside Speakers — App Styles
+   Editorial, minimal, Teal accent only.
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --page-max: 1440px;
+  --nav-h: 72px;
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --ink: #141311;
+  --ink-soft: #3a3834;
+  --ink-muted: #86827a;
+  --line: #e7e3da;
+  --line-strong: #cfc9bb;
+  --accent: var(--brand-teal-600);
+  --accent-soft: var(--brand-teal-50);
+  --font-serif: "Fraunces", "Noto Serif KR", "Times New Roman", serif;
+  --font-sans: var(--font-kr);
+  --font-en: var(--font-en);
+}
+
+body.theme-dark {
+  --bg: #0e0d0c;
+  --surface: #181715;
+  --ink: #f5f2eb;
+  --ink-soft: #cfc9bb;
+  --ink-muted: #86827a;
+  --line: #2a2723;
+  --line-strong: #3a3631;
+  --accent: var(--brand-teal-300);
+  --accent-soft: rgba(58, 169, 156, 0.12);
+}
+
+/* Fraunces + its proper italic */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500;1,9..144,600&display=swap');
+/* Nanum Myeongjo — Korean serif that ships a real italic-feel via its handwriting cousin; but since most Korean serifs lack italic, we pair Fraunces italic (English/punctuation) with Korean in upright serif visually distinguished by hue/weight */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap');
+/* Playfair Display italic — used specifically for .italic-quote blocks so English quote marks + any latin read as editorial italic */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
+
+/* Local Pretendard — override the CDN version with project-bundled files */
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 100; font-display: swap; src: url('../fonts/Pretendard-Thin.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 200; font-display: swap; src: url('../fonts/Pretendard-ExtraLight.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/Pretendard-Light.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/Pretendard-Regular.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/Pretendard-Medium.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/Pretendard-SemiBold.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 700; font-display: swap; src: url('../fonts/Pretendard-Bold.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 800; font-display: swap; src: url('../fonts/Pretendard-ExtraBold.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard'; font-style: normal; font-weight: 900; font-display: swap; src: url('../fonts/Pretendard-Black.otf') format('opentype'); }
+
+html, body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+ul { list-style: none; }
+
+.serif { font-family: var(--font-serif); font-feature-settings: "liga", "kern"; letter-spacing: -0.01em; }
+/* Editorial italic quote — uses a proper italic-designed family.
+   Fraunces italic covers Latin/punctuation with real slanted forms.
+   For Korean we use Noto Serif KR (no true italic exists in most Korean serifs),
+   combined with a slight transform: skewX for visual tilt + lighter weight,
+   which reads as intentional editorial styling rather than a browser fake. */
+.italic-quote {
+  font-family: 'Fraunces', 'Noto Serif KR', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-feature-settings: "liga", "kern", "ss01";
+  letter-spacing: -0.015em;
+}
+.italic-quote :lang(ko),
+.italic-quote .ko {
+  font-family: 'Noto Serif KR', serif;
+  font-style: normal;
+  font-weight: 300;
+  display: inline-block;
+  transform: skewX(-7deg);
+  transform-origin: 0 80%;
+  padding-right: 0.18em;
+}
+.en    { font-family: var(--font-en); }
+.mono  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-family: var(--font-en);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.divider { height: 1px; background: var(--line); width: 100%; }
+
+/* portrait placeholder — striped monochrome w/ label */
+.portrait-ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(0,0,0,0.04) 0 2px,
+      transparent 2px 9px
+    ),
+    linear-gradient(180deg, var(--_ph-a, #cfc9bb) 0%, var(--_ph-b, #86827a) 100%);
+  color: rgba(255,255,255,0.85);
+  display: flex; align-items: flex-end;
+  isolation: isolate;
+}
+.portrait-ph::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.portrait-ph .ph-label {
+  position: absolute; top: 14px; left: 14px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  z-index: 1;
+}
+.portrait-ph .ph-initials {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(48px, 14%, 160px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  padding: 0 0 22px 22px;
+  color: rgba(255,255,255,0.92);
+  z-index: 1;
+}
+
+/* buttons ---------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 22px;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  border-radius: 0;
+  border: 1px solid transparent;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.btn-primary { background: var(--ink); color: #fff; }
+.btn-primary:hover { background: var(--accent); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn-ghost:hover { border-color: var(--ink); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--brand-teal-700); }
+.btn-sm { padding: 9px 14px; font-size: 12px; gap: 6px; }
+
+/* page container --------------------------------------------- */
+.wrap {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 48px;
+}
+@media (max-width: 780px) {
+  .wrap { padding: 0 20px; }
+}
+
+/* visually hidden */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* entrance utility used in a few places */
+.fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 700ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes fadeInUp {
+  to { opacity: 1; transform: none; }
+}

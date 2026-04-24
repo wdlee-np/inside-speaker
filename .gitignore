@@ -1,6 +1,30 @@
 node_modules/
-data/*.csv
-mcp-shrimp-task-manager/
-shrimp_data/
 .env
 .env.local
+.env.production
+
+mcp-shrimp-task-manager/
+shrimp_data/
+
+.vercel
+.next/
+dist/
+build/
+
+# Next.js subdirectory
+nextjs/.env.local
+nextjs/.next/
+nextjs/node_modules/
+
+# 대용량 에셋
+*.zip
+
+# 임시 파일
+.playwright-mcp/
+edit-page-snapshot.md
+
+# 업로드 폴더 (런타임 생성)
+public/uploads/
+
+# 빌드 생성 파일
+nextjs/tsconfig.tsbuildinfo
