@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/session";
 
-const isDev = () =>
-  (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
+const isDev = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return !url || url.includes("placeholder");
+};
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: request.headers } });

@@ -21,8 +21,10 @@ import {
   type SeedSpeaker,
 } from "@/lib/seed-data";
 
-const isDev = () =>
-  (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
+const isDev = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return !url || url.includes("placeholder");
+};
 
 function seedToSpeaker(s: SeedSpeaker): Speaker {
   return {
