@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "speaker-images";
 const FOLDER = "images";
@@ -20,7 +20,7 @@ export async function uploadSpeakerImage(
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const filename = `${FOLDER}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  const sb = await createAdminClient();
+  const sb = await createClient();
   const { error } = await sb.storage
     .from(BUCKET)
     .upload(filename, file, { contentType: file.type, upsert: false });
