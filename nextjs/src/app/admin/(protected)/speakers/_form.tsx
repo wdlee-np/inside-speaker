@@ -53,6 +53,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const portraitUrl = watch("portrait_url");
   const [portraitUploading, setPortraitUploading] = useState(false);
   const [videoThumbUploading, setVideoThumbUploading] = useState<Record<number, boolean>>({});
+  const [portraitInputMode, setPortraitInputMode] = useState<"upload" | "url">("upload");
+  const [thumbInputModes, setThumbInputModes] = useState<Record<number, "upload" | "url">>({});
 
   const [bio, setBio] = useState<string[]>(
     defaultValues.bio.length ? defaultValues.bio : [""]
@@ -197,6 +199,23 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           <FieldGrid cols={2}>
             <Field label="프로필 이미지" span={2}>
               <input type="hidden" {...register("portrait_url")} />
+              <div style={{ marginBottom: 10, display: "flex", gap: 6 }}>
+                {(["upload", "url"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setPortraitInputMode(m)}
+                    style={{
+                      fontSize: 11, padding: "4px 12px", borderRadius: 4, cursor: "pointer",
+                      background: portraitInputMode === m ? "var(--color-accent)" : "transparent",
+                      color: portraitInputMode === m ? "#fff" : "var(--color-ink-muted)",
+                      border: `1px solid ${portraitInputMode === m ? "var(--color-accent)" : "var(--color-line)"}`,
+                    }}
+                  >
+                    {m === "upload" ? "파일 업로드" : "URL 직접 입력"}
+                  </button>
+                ))}
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 {portraitUrl && (
                   <img
@@ -205,40 +224,51 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                     style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid var(--color-line)", flexShrink: 0 }}
                   />
                 )}
-                <div>
-                  <label
-                    style={{
-                      ...addBtn,
-                      display: "inline-block",
-                      cursor: portraitUploading ? "not-allowed" : "pointer",
-                      opacity: portraitUploading ? 0.6 : 1,
-                    }}
-                  >
-                    {portraitUploading ? "업로드 중…" : portraitUrl ? "이미지 교체" : "이미지 업로드"}
+                <div style={{ flex: 1 }}>
+                  {portraitInputMode === "upload" ? (
+                    <>
+                      <label
+                        style={{
+                          ...addBtn,
+                          display: "inline-block",
+                          cursor: portraitUploading ? "not-allowed" : "pointer",
+                          opacity: portraitUploading ? 0.6 : 1,
+                        }}
+                      >
+                        {portraitUploading ? "업로드 중…" : portraitUrl ? "이미지 교체" : "이미지 업로드"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          disabled={portraitUploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePortraitUpload(file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      {portraitUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setValue("portrait_url", "")}
+                          style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
+                        >
+                          삭제
+                        </button>
+                      )}
+                      <p style={{ marginTop: 6, fontSize: 11, color: "var(--color-ink-muted)" }}>
+                        JPG, PNG, WebP 권장 · speaker-images 폴더에 저장됩니다
+                      </p>
+                    </>
+                  ) : (
                     <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      disabled={portraitUploading}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handlePortraitUpload(file);
-                        e.target.value = "";
-                      }}
+                      placeholder="https://example.com/image.jpg"
+                      value={portraitUrl ?? ""}
+                      onChange={(e) => setValue("portrait_url", e.target.value)}
+                      style={inp()}
                     />
-                  </label>
-                  {portraitUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setValue("portrait_url", "")}
-                      style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
-                    >
-                      삭제
-                    </button>
                   )}
-                  <p style={{ marginTop: 6, fontSize: 11, color: "var(--color-ink-muted)" }}>
-                    JPG, PNG, WebP 권장 · 모든 이미지는 speaker-images 폴더에 저장됩니다
-                  </p>
                 </div>
               </div>
             </Field>
@@ -580,6 +610,23 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                   />
                 </Field>
                 <Field label="썸네일 이미지" span={2}>
+                  <div style={{ marginBottom: 8, display: "flex", gap: 6 }}>
+                    {(["upload", "url"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setThumbInputModes((prev) => ({ ...prev, [i]: m }))}
+                        style={{
+                          fontSize: 11, padding: "4px 12px", borderRadius: 4, cursor: "pointer",
+                          background: (thumbInputModes[i] ?? "upload") === m ? "var(--color-accent)" : "transparent",
+                          color: (thumbInputModes[i] ?? "upload") === m ? "#fff" : "var(--color-ink-muted)",
+                          border: `1px solid ${(thumbInputModes[i] ?? "upload") === m ? "var(--color-accent)" : "var(--color-line)"}`,
+                        }}
+                      >
+                        {m === "upload" ? "파일 업로드" : "URL 직접 입력"}
+                      </button>
+                    ))}
+                  </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     {v.thumb_url && (
                       <img
@@ -588,40 +635,55 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                         style={{ width: 80, height: 45, objectFit: "cover", borderRadius: 4, border: "1px solid var(--color-line)", flexShrink: 0 }}
                       />
                     )}
-                    <div>
-                      <label
-                        style={{
-                          ...addBtn,
-                          display: "inline-block",
-                          cursor: videoThumbUploading[i] ? "not-allowed" : "pointer",
-                          opacity: videoThumbUploading[i] ? 0.6 : 1,
-                        }}
-                      >
-                        {videoThumbUploading[i] ? "업로드 중…" : v.thumb_url ? "썸네일 교체" : "썸네일 업로드"}
+                    <div style={{ flex: 1 }}>
+                      {(thumbInputModes[i] ?? "upload") === "upload" ? (
+                        <>
+                          <label
+                            style={{
+                              ...addBtn,
+                              display: "inline-block",
+                              cursor: videoThumbUploading[i] ? "not-allowed" : "pointer",
+                              opacity: videoThumbUploading[i] ? 0.6 : 1,
+                            }}
+                          >
+                            {videoThumbUploading[i] ? "업로드 중…" : v.thumb_url ? "썸네일 교체" : "썸네일 업로드"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              disabled={!!videoThumbUploading[i]}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleThumbUpload(file, i);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {v.thumb_url && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = [...videos];
+                                next[i] = { ...next[i], thumb_url: "" };
+                                setVideos(next);
+                              }}
+                              style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
+                            >
+                              삭제
+                            </button>
+                          )}
+                        </>
+                      ) : (
                         <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          disabled={!!videoThumbUploading[i]}
+                          placeholder="https://example.com/thumbnail.jpg"
+                          value={v.thumb_url}
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleThumbUpload(file, i);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                      {v.thumb_url && (
-                        <button
-                          type="button"
-                          onClick={() => {
                             const next = [...videos];
-                            next[i] = { ...next[i], thumb_url: "" };
+                            next[i] = { ...next[i], thumb_url: e.target.value };
                             setVideos(next);
                           }}
-                          style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
-                        >
-                          삭제
-                        </button>
+                          style={inp()}
+                        />
                       )}
                     </div>
                   </div>

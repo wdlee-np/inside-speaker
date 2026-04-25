@@ -1,6 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+function getYoutubeId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&\s]+)/,
+    /youtu\.be\/([^?&\s]+)/,
+    /youtube\.com\/embed\/([^?&\s]+)/,
+    /youtube\.com\/shorts\/([^?&\s]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
 import Link from "next/link";
 import type { Speaker, SpeakerWithRelations, CategoryWithSubs } from "@/lib/database.types";
 import { Portrait } from "@/components/portrait";
@@ -35,6 +50,7 @@ export function SpeakerDetailClient({
   parentCategory,
 }: SpeakerDetailClientProps) {
   const [active, setActive] = useState("at-a-glance");
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const { openInquiry } = useInquiry();
 
   const tabs = ALL_TABS.filter((t) => {
@@ -214,59 +230,93 @@ export function SpeakerDetailClient({
       {speaker.videos.length > 0 && (
         <DetailSection id="videos" index="02" title="강연 영상" eyebrow="Videos" muted>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 32 }} className="videos-grid">
-            {speaker.videos.map((v) => (
-              <div key={v.id}>
-                <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
-                  {v.thumb_url ? (
-                    <img
-                      src={v.thumb_url}
-                      alt={v.title}
-                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div
-                      className="portrait-ph"
-                      style={{
-                        position: "absolute", inset: 0, aspectRatio: "auto",
-                        "--_ph-a": "#3a3834", "--_ph-b": "#141311",
-                      } as React.CSSProperties}
-                    >
-                      <span className="ph-label">Video · Placeholder</span>
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      position: "absolute", inset: 0, display: "grid", placeItems: "center",
-                      background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
-                    }}
-                  >
-                    <button
-                      style={{
-                        width: 64, height: 64, borderRadius: 999,
-                        background: "rgba(255,255,255,.92)", color: "var(--ink)",
-                        display: "grid", placeItems: "center", border: "none",
-                      }}
-                    >
-                      <Icon name="play" size={22} />
-                    </button>
+            {speaker.videos.map((v) => {
+              const youtubeId = getYoutubeId(v.video_url ?? "");
+              const isPlaying = playingVideoId === v.id;
+
+              const handlePlay = () => {
+                if (youtubeId) {
+                  setPlayingVideoId(v.id);
+                } else if (v.video_url) {
+                  window.open(v.video_url, "_blank", "noopener,noreferrer");
+                }
+              };
+
+              return (
+                <div key={v.id}>
+                  <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
+                    {isPlaying && youtubeId ? (
+                      <iframe
+                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+                        allow="autoplay; encrypted-media; fullscreen"
+                        allowFullScreen
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                      />
+                    ) : (
+                      <>
+                        {v.thumb_url ? (
+                          <img
+                            src={v.thumb_url}
+                            alt={v.title}
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : youtubeId ? (
+                          <img
+                            src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`}
+                            alt={v.title}
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <div
+                            className="portrait-ph"
+                            style={{
+                              position: "absolute", inset: 0, aspectRatio: "auto",
+                              "--_ph-a": "#3a3834", "--_ph-b": "#141311",
+                            } as React.CSSProperties}
+                          >
+                            <span className="ph-label">Video · Placeholder</span>
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                            background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
+                            cursor: v.video_url ? "pointer" : "default",
+                          }}
+                          onClick={handlePlay}
+                        >
+                          {v.video_url && (
+                            <button
+                              style={{
+                                width: 64, height: 64, borderRadius: 999,
+                                background: "rgba(255,255,255,.92)", color: "var(--ink)",
+                                display: "grid", placeItems: "center", border: "none", cursor: "pointer",
+                              }}
+                            >
+                              <Icon name="play" size={22} />
+                            </button>
+                          )}
+                        </div>
+                        {v.duration && (
+                          <span
+                            className="en"
+                            style={{
+                              position: "absolute", bottom: 12, right: 12,
+                              fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px",
+                            }}
+                          >
+                            {v.duration}
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
-                  {v.duration && (
-                    <span
-                      className="en"
-                      style={{
-                        position: "absolute", bottom: 12, right: 12,
-                        fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px",
-                      }}
-                    >
-                      {v.duration}
-                    </span>
-                  )}
+                  <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
+                    {v.title}
+                  </h4>
                 </div>
-                <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
-                  {v.title}
-                </h4>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </DetailSection>
       )}
