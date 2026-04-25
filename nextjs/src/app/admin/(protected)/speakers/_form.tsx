@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSpeaker, updateSpeaker } from "@/app/admin/_actions/speakers";
+import { uploadSpeakerImage } from "@/app/admin/_actions/upload";
 import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
 import type { CategoryWithSubs, Speaker } from "@/lib/database.types";
 import { Icon } from "@/components/icon";
@@ -28,6 +29,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ScalarFields>({
     defaultValues: {
@@ -47,6 +50,10 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
     },
   });
 
+  const portraitUrl = watch("portrait_url");
+  const [portraitUploading, setPortraitUploading] = useState(false);
+  const [videoThumbUploading, setVideoThumbUploading] = useState<Record<number, boolean>>({});
+
   const [bio, setBio] = useState<string[]>(
     defaultValues.bio.length ? defaultValues.bio : [""]
   );
@@ -58,16 +65,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const [careers, setCareers] = useState(
     defaultValues.careers.length ? defaultValues.careers : [{ year: "", role: "" }]
   );
-  const [videos, setVideos] = useState(
-    defaultValues.videos.length
-      ? defaultValues.videos
-      : [{ title: "", duration: "", video_url: "", thumb_url: "" }]
-  );
-  const [reviews, setReviews] = useState(
-    defaultValues.reviews.length
-      ? defaultValues.reviews
-      : [{ company: "", author: "", quote: "" }]
-  );
+  const [videos, setVideos] = useState(defaultValues.videos);
+  const [reviews, setReviews] = useState(defaultValues.reviews);
 
   const onSubmit = handleSubmit((scalars) => {
     startTransition(async () => {
@@ -102,6 +101,36 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
     id: string
   ) => {
     setArr(arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
+  };
+
+  const handlePortraitUpload = async (file: File) => {
+    setPortraitUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadSpeakerImage(fd);
+      if (result.error) toast.error(result.error);
+      else setValue("portrait_url", result.url!);
+    } finally {
+      setPortraitUploading(false);
+    }
+  };
+
+  const handleThumbUpload = async (file: File, videoIndex: number) => {
+    setVideoThumbUploading((prev) => ({ ...prev, [videoIndex]: true }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadSpeakerImage(fd);
+      if (result.error) toast.error(result.error);
+      else {
+        const next = [...videos];
+        next[videoIndex] = { ...next[videoIndex], thumb_url: result.url! };
+        setVideos(next);
+      }
+    } finally {
+      setVideoThumbUploading((prev) => ({ ...prev, [videoIndex]: false }));
+    }
   };
 
   return (
@@ -166,12 +195,52 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
         {/* 외관 / 노출 */}
         <Section title="외관 / 노출">
           <FieldGrid cols={2}>
-            <Field label="프로필 이미지 URL" span={2}>
-              <input
-                {...register("portrait_url")}
-                placeholder="https://..."
-                style={inp()}
-              />
+            <Field label="프로필 이미지" span={2}>
+              <input type="hidden" {...register("portrait_url")} />
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {portraitUrl && (
+                  <img
+                    src={portraitUrl}
+                    alt="프로필 미리보기"
+                    style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid var(--color-line)", flexShrink: 0 }}
+                  />
+                )}
+                <div>
+                  <label
+                    style={{
+                      ...addBtn,
+                      display: "inline-block",
+                      cursor: portraitUploading ? "not-allowed" : "pointer",
+                      opacity: portraitUploading ? 0.6 : 1,
+                    }}
+                  >
+                    {portraitUploading ? "업로드 중…" : portraitUrl ? "이미지 교체" : "이미지 업로드"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      disabled={portraitUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePortraitUpload(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {portraitUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setValue("portrait_url", "")}
+                      style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
+                    >
+                      삭제
+                    </button>
+                  )}
+                  <p style={{ marginTop: 6, fontSize: 11, color: "var(--color-ink-muted)" }}>
+                    JPG, PNG, WebP 권장 · 모든 이미지는 speaker-images 폴더에 저장됩니다
+                  </p>
+                </div>
+              </div>
             </Field>
             <Field label="히어로 배경색">
               <input
@@ -465,15 +534,13 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 >
                   영상 {i + 1}
                 </span>
-                {videos.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setVideos(videos.filter((_, j) => j !== i))}
-                    style={removeBtn}
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setVideos(videos.filter((_, j) => j !== i))}
+                  style={removeBtn}
+                >
+                  <Icon name="close" size={14} />
+                </button>
               </div>
               <FieldGrid cols={2}>
                 <Field label="제목">
@@ -512,17 +579,52 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                     style={inp()}
                   />
                 </Field>
-                <Field label="썸네일 URL" span={2}>
-                  <input
-                    value={v.thumb_url}
-                    onChange={(e) => {
-                      const next = [...videos];
-                      next[i] = { ...next[i], thumb_url: e.target.value };
-                      setVideos(next);
-                    }}
-                    placeholder="https://..."
-                    style={inp()}
-                  />
+                <Field label="썸네일 이미지" span={2}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {v.thumb_url && (
+                      <img
+                        src={v.thumb_url}
+                        alt="썸네일 미리보기"
+                        style={{ width: 80, height: 45, objectFit: "cover", borderRadius: 4, border: "1px solid var(--color-line)", flexShrink: 0 }}
+                      />
+                    )}
+                    <div>
+                      <label
+                        style={{
+                          ...addBtn,
+                          display: "inline-block",
+                          cursor: videoThumbUploading[i] ? "not-allowed" : "pointer",
+                          opacity: videoThumbUploading[i] ? 0.6 : 1,
+                        }}
+                      >
+                        {videoThumbUploading[i] ? "업로드 중…" : v.thumb_url ? "썸네일 교체" : "썸네일 업로드"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          disabled={!!videoThumbUploading[i]}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleThumbUpload(file, i);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      {v.thumb_url && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = [...videos];
+                            next[i] = { ...next[i], thumb_url: "" };
+                            setVideos(next);
+                          }}
+                          style={{ ...removeBtn, marginLeft: 8, width: "auto", height: "auto", padding: "6px 10px", fontSize: 12 }}
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </Field>
               </FieldGrid>
             </div>
@@ -564,15 +666,13 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 >
                   후기 {i + 1}
                 </span>
-                {reviews.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setReviews(reviews.filter((_, j) => j !== i))}
-                    style={removeBtn}
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setReviews(reviews.filter((_, j) => j !== i))}
+                  style={removeBtn}
+                >
+                  <Icon name="close" size={14} />
+                </button>
               </div>
               <FieldGrid cols={2}>
                 <Field label="회사">

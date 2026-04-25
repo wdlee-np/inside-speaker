@@ -9,7 +9,7 @@ import { SpeakerCard } from "@/components/speaker-card";
 import { InquiryForm } from "@/components/inquiry-drawer";
 import { useInquiry } from "@/app/(public)/inquiry-context";
 
-const TABS = [
+const ALL_TABS = [
   { id: "at-a-glance", label: "At a Glance", kr: "핵심 요약" },
   { id: "videos",      label: "Videos",          kr: "강연 영상" },
   { id: "biography",   label: "Biography",        kr: "상세 프로필" },
@@ -37,6 +37,12 @@ export function SpeakerDetailClient({
   const [active, setActive] = useState("at-a-glance");
   const { openInquiry } = useInquiry();
 
+  const tabs = ALL_TABS.filter((t) => {
+    if (t.id === "videos") return speaker.videos.length > 0;
+    if (t.id === "reviews") return speaker.reviews.length > 0;
+    return true;
+  });
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
@@ -46,7 +52,7 @@ export function SpeakerDetailClient({
       },
       { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
     );
-    TABS.forEach((t) => {
+    tabs.forEach((t) => {
       const el = document.getElementById(t.id);
       if (el) obs.observe(el);
     });
@@ -129,16 +135,18 @@ export function SpeakerDetailClient({
                 >
                   <Icon name="arrow" size={14} /> 섭외 문의
                 </button>
-                <button
-                  onClick={() => smoothTo("videos")}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 10,
-                    padding: "14px 22px", fontSize: 13, fontWeight: 600,
-                    background: "transparent", border: "1px solid var(--line-strong)", color: "var(--ink)",
-                  }}
-                >
-                  <Icon name="play" size={12} /> 강연 영상 보기
-                </button>
+                {speaker.videos.length > 0 && (
+                  <button
+                    onClick={() => smoothTo("videos")}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 10,
+                      padding: "14px 22px", fontSize: 13, fontWeight: 600,
+                      background: "transparent", border: "1px solid var(--line-strong)", color: "var(--ink)",
+                    }}
+                  >
+                    <Icon name="play" size={12} /> 강연 영상 보기
+                  </button>
+                )}
               </div>
             </div>
             <Portrait speaker={speaker} aspect="4/5" />
@@ -155,7 +163,7 @@ export function SpeakerDetailClient({
         }}
       >
         <div className="wrap" style={{ display: "flex", overflowX: "auto", gap: 0 }}>
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => smoothTo(t.id)}
@@ -203,55 +211,65 @@ export function SpeakerDetailClient({
       </DetailSection>
 
       {/* VIDEOS */}
-      <DetailSection id="videos" index="02" title="강연 영상" eyebrow="Videos" muted>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 32 }} className="videos-grid">
-          {speaker.videos.map((v) => (
-            <div key={v.id}>
-              <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
-                <div
-                  className="portrait-ph"
-                  style={{
-                    position: "absolute", inset: 0, aspectRatio: "auto",
-                    "--_ph-a": "#3a3834", "--_ph-b": "#141311",
-                  } as React.CSSProperties}
-                >
-                  <span className="ph-label">Video · Placeholder</span>
-                </div>
-                <div
-                  style={{
-                    position: "absolute", inset: 0, display: "grid", placeItems: "center",
-                    background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
-                  }}
-                >
-                  <button
+      {speaker.videos.length > 0 && (
+        <DetailSection id="videos" index="02" title="강연 영상" eyebrow="Videos" muted>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 32 }} className="videos-grid">
+            {speaker.videos.map((v) => (
+              <div key={v.id}>
+                <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
+                  {v.thumb_url ? (
+                    <img
+                      src={v.thumb_url}
+                      alt={v.title}
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div
+                      className="portrait-ph"
+                      style={{
+                        position: "absolute", inset: 0, aspectRatio: "auto",
+                        "--_ph-a": "#3a3834", "--_ph-b": "#141311",
+                      } as React.CSSProperties}
+                    >
+                      <span className="ph-label">Video · Placeholder</span>
+                    </div>
+                  )}
+                  <div
                     style={{
-                      width: 64, height: 64, borderRadius: 999,
-                      background: "rgba(255,255,255,.92)", color: "var(--ink)",
-                      display: "grid", placeItems: "center", border: "none",
+                      position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                      background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
                     }}
                   >
-                    <Icon name="play" size={22} />
-                  </button>
+                    <button
+                      style={{
+                        width: 64, height: 64, borderRadius: 999,
+                        background: "rgba(255,255,255,.92)", color: "var(--ink)",
+                        display: "grid", placeItems: "center", border: "none",
+                      }}
+                    >
+                      <Icon name="play" size={22} />
+                    </button>
+                  </div>
+                  {v.duration && (
+                    <span
+                      className="en"
+                      style={{
+                        position: "absolute", bottom: 12, right: 12,
+                        fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px",
+                      }}
+                    >
+                      {v.duration}
+                    </span>
+                  )}
                 </div>
-                {v.duration && (
-                  <span
-                    className="en"
-                    style={{
-                      position: "absolute", bottom: 12, right: 12,
-                      fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px",
-                    }}
-                  >
-                    {v.duration}
-                  </span>
-                )}
+                <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
+                  {v.title}
+                </h4>
               </div>
-              <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
-                {v.title}
-              </h4>
-            </div>
-          ))}
-        </div>
-      </DetailSection>
+            ))}
+          </div>
+        </DetailSection>
+      )}
 
       {/* BIOGRAPHY */}
       <DetailSection id="biography" index="03" title="상세 프로필" eyebrow="Biography">
@@ -322,39 +340,41 @@ export function SpeakerDetailClient({
       </DetailSection>
 
       {/* REVIEWS */}
-      <DetailSection id="reviews" index="05" title="수강 후기" eyebrow="Reviews">
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }} className="reviews-grid">
-          {speaker.reviews.map((r, i) => (
-            <figure
-              key={i}
-              style={{ border: "1px solid var(--line)", padding: "40px 36px", background: "var(--surface)" }}
-            >
-              <span
-                className="serif"
-                aria-hidden
-                style={{ fontSize: 72, lineHeight: 0.5, color: "var(--accent)", fontWeight: 300, display: "block", height: 24 }}
+      {speaker.reviews.length > 0 && (
+        <DetailSection id="reviews" index="05" title="수강 후기" eyebrow="Reviews">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24 }} className="reviews-grid">
+            {speaker.reviews.map((r, i) => (
+              <figure
+                key={i}
+                style={{ border: "1px solid var(--line)", padding: "40px 36px", background: "var(--surface)" }}
               >
-                "
-              </span>
-              <blockquote
-                className="serif"
-                style={{ marginTop: 20, fontSize: 24, fontWeight: 300, lineHeight: 1.5, letterSpacing: "-0.015em", color: "var(--ink)" }}
-              >
-                {r.quote}
-              </blockquote>
-              <figcaption
-                style={{
-                  marginTop: 28, paddingTop: 16, borderTop: "1px solid var(--line)",
-                  display: "flex", justifyContent: "space-between", alignItems: "baseline",
-                }}
-              >
-                <span style={{ fontSize: 14, fontWeight: 600 }}>{r.company}</span>
-                {r.author && <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>{r.author}</span>}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </DetailSection>
+                <span
+                  className="serif"
+                  aria-hidden
+                  style={{ fontSize: 72, lineHeight: 0.5, color: "var(--accent)", fontWeight: 300, display: "block", height: 24 }}
+                >
+                  "
+                </span>
+                <blockquote
+                  className="serif"
+                  style={{ marginTop: 20, fontSize: 24, fontWeight: 300, lineHeight: 1.5, letterSpacing: "-0.015em", color: "var(--ink)" }}
+                >
+                  {r.quote}
+                </blockquote>
+                <figcaption
+                  style={{
+                    marginTop: 28, paddingTop: 16, borderTop: "1px solid var(--line)",
+                    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                  }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{r.company}</span>
+                  {r.author && <span style={{ fontSize: 12, color: "var(--ink-muted)" }}>{r.author}</span>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </DetailSection>
+      )}
 
       {/* RELATED */}
       <DetailSection id="related" index="06" title="추천 강사" eyebrow="Related" muted>

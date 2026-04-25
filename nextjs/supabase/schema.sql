@@ -249,3 +249,22 @@ INSERT INTO subcategories (id, category_id, label, sort_order) VALUES
   ('self-dev',         'economy-life', '자기계발',                  2),
   ('health-wellbeing', 'economy-life', '건강/웰빙',                 3)
 ON CONFLICT (id) DO NOTHING;
+
+-- ── Storage: speaker-images bucket ──────────────────────────
+-- Supabase Dashboard > Storage > New bucket: "speaker-images", Public ON
+-- 또는 아래 SQL을 Supabase SQL Editor에서 실행
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('speaker-images', 'speaker-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY IF NOT EXISTS "public_read_speaker_images" ON storage.objects
+  FOR SELECT USING (bucket_id = 'speaker-images');
+
+CREATE POLICY IF NOT EXISTS "admin_upload_speaker_images" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'speaker-images' AND is_admin());
+
+CREATE POLICY IF NOT EXISTS "admin_update_speaker_images" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'speaker-images' AND is_admin());
+
+CREATE POLICY IF NOT EXISTS "admin_delete_speaker_images" ON storage.objects
+  FOR DELETE USING (bucket_id = 'speaker-images' AND is_admin());
