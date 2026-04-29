@@ -149,6 +149,22 @@ export async function enableAdminMember(id: string): Promise<{ error?: string }>
   return {};
 }
 
+export async function resetAdminPassword(
+  id: string,
+  newPassword: string
+): Promise<{ error?: string }> {
+  if (isDev()) return { error: "개발 모드에서는 지원되지 않습니다." };
+  if (newPassword.length < 8) return { error: "비밀번호는 8자 이상이어야 합니다." };
+
+  const sb = await createAdminClient();
+
+  const { error } = await sb.auth.admin.updateUserById(id, { password: newPassword });
+
+  if (error) return { error: (error as { message: string }).message };
+
+  return {};
+}
+
 export async function deleteAdminMember(
   id: string,
   currentUserId: string
