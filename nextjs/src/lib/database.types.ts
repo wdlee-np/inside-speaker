@@ -97,6 +97,7 @@ export interface AdminUser {
   display_name: string | null;
   role: AdminRole;
   created_at: string;
+  disabled_at: string | null;
 }
 
 export interface SpeakerWithRelations extends Speaker {

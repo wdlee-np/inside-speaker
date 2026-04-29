@@ -28,3 +28,6 @@ public/uploads/
 
 # 빌드 생성 파일
 nextjs/tsconfig.tsbuildinfo
+
+.vercel
+.env*.local

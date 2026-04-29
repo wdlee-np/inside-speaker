@@ -9,6 +9,7 @@ const navItems = [
   { href: "/admin/speakers", label: "연사 관리", icon: "user" as const },
   { href: "/admin/categories", label: "카테고리", icon: "grid" as const },
   { href: "/admin/inquiries", label: "섭외 문의", icon: "mail" as const },
+  { href: "/admin/members", label: "회원 관리", icon: "bookmark" as const },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
