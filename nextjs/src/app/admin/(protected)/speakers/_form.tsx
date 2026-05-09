@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSpeaker, updateSpeaker, deleteSpeakerFile } from "@/app/admin/_actions/speakers";
-import { uploadSpeakerImage, uploadSpeakerFile } from "@/app/admin/_actions/upload";
+import { uploadSpeakerImage, uploadSpeakerFile, getFileSignedUrl } from "@/app/admin/_actions/upload";
 import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
 import type { CategoryWithSubs, Speaker, SpeakerFile, SpeakerFileType } from "@/lib/database.types";
 import { Icon } from "@/components/icon";
@@ -285,11 +285,30 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 {portraitUrl && (
-                  <img
-                    src={portraitUrl}
-                    alt="프로필 미리보기"
-                    style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid var(--color-line)", flexShrink: 0 }}
-                  />
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <a href={portraitUrl} target="_blank" rel="noopener noreferrer" download title="이미지 다운로드">
+                      <img
+                        src={portraitUrl}
+                        alt="프로필 미리보기"
+                        style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid var(--color-line)", display: "block" }}
+                      />
+                    </a>
+                    <a
+                      href={portraitUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      title="이미지 다운로드"
+                      style={{
+                        position: "absolute", bottom: 2, right: 2,
+                        width: 20, height: 20, borderRadius: 4,
+                        background: "rgba(0,0,0,.55)", color: "#fff",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <Icon name="download" size={11} />
+                    </a>
+                  </div>
                 )}
                 <div style={{ flex: 1 }}>
                   {portraitInputMode === "upload" ? (
@@ -1140,21 +1159,52 @@ function FileSection({
               border: "1px solid var(--color-line)", borderRadius: 4,
             }}
           >
-            <span style={{ fontSize: 12, color: "var(--color-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>
-              {f.file_name}
+            <span style={{ fontSize: 12, color: "var(--color-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+              {f.file_url ? (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const res = await getFileSignedUrl(f.file_url);
+                    if (res.url) window.open(res.url, "_blank");
+                    else toast.error(res.error ?? "다운로드 실패");
+                  }}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", color: "var(--color-accent, #14756b)", textDecoration: "underline", textDecorationStyle: "dotted", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}
+                  title="클릭하여 다운로드"
+                >
+                  {f.file_name}
+                </button>
+              ) : (
+                f.file_name
+              )}
               {(f.file_size ?? 0) > 0 && (
                 <span style={{ marginLeft: 8, fontSize: 11, color: "var(--color-ink-muted)" }}>
                   ({((f.file_size ?? 0) / 1024 / 1024).toFixed(1)} MB)
                 </span>
               )}
             </span>
-            <button
-              type="button"
-              onClick={() => onDelete(f.id)}
-              style={{ ...removeBtn, width: "auto", height: "auto", padding: "4px 8px", fontSize: 11 }}
-            >
-              삭제
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 8 }}>
+              {f.file_url && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const res = await getFileSignedUrl(f.file_url);
+                    if (res.url) window.open(res.url, "_blank");
+                    else toast.error(res.error ?? "다운로드 실패");
+                  }}
+                  title="다운로드"
+                  style={{ ...removeBtn, width: "auto", height: "auto", padding: "4px 7px", color: "var(--color-ink-soft)" }}
+                >
+                  <Icon name="download" size={12} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onDelete(f.id)}
+                style={{ ...removeBtn, width: "auto", height: "auto", padding: "4px 8px", fontSize: 11 }}
+              >
+                삭제
+              </button>
+            </div>
           </div>
         ))}
         {canUpload && (

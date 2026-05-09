@@ -96,7 +96,7 @@ export function Footer({ categories }: FooterProps) {
           }}
           className="footer-base"
         >
-          <span className="en">© 2026 INSIDE COMPANY · SPEAKERS BUREAU</span>
+          <span className="en">© 2026 INSIDE COMPANY · JUST 강사</span>
           <span className="en">ALL RIGHTS RESERVED</span>
         </div>
       </div>

@@ -77,7 +77,7 @@ export function CategoryContent({
         <div className="wrap">
           {speakers.length === 0 ? (
             <div style={{ padding: "80px 0", textAlign: "center", color: "var(--ink-muted)" }}>
-              <p>해당 세부 분야의 연사가 곧 업데이트됩니다.</p>
+              <p>해당 세부 분야의 강사가 곧 업데이트됩니다.</p>
               <button
                 onClick={() => openInquiry()}
                 style={{
@@ -86,7 +86,7 @@ export function CategoryContent({
                   background: "transparent", border: "1px solid var(--line-strong)", color: "var(--ink)",
                 }}
               >
-                원하는 연사를 요청하기
+                원하는 강사를 요청하기
               </button>
             </div>
           ) : (

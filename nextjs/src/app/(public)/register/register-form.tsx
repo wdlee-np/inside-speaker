@@ -177,7 +177,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             강사 등록 신청
           </h1>
           <p style={{ marginTop: 12, fontSize: 14, color: "var(--ink-muted)", maxWidth: 540 }}>
-            Inside Speakers에 등록 신청을 할 수 있습니다. 검토 후 등록 여부를 연락드립니다.
+            Just 강사에 등록 신청을 할 수 있습니다. 검토 후 등록 여부를 연락드립니다.
           </p>
         </div>
       </div>

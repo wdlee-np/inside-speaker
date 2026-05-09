@@ -52,7 +52,7 @@ export function LoginForm() {
               color: "var(--color-ink)",
             }}
           >
-            INSIDE SPEAKERS
+            JUST 강사
           </div>
           <div
             style={{

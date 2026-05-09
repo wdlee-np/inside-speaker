@@ -20,6 +20,7 @@ const PATHS: Record<string, string> = {
   calendar: "M3 10h18M8 3v4M16 3v4M5 7h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z",
   bookmark: "M6 3h12v18l-6-4-6 4z",
   audio:    "M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
+  download: "M12 3v13M7 11l5 5 5-5M3 19h18",
 };
 
 interface IconProps {

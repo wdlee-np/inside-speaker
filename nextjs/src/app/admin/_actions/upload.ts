@@ -80,6 +80,32 @@ export async function uploadSpeakerFile(
   return {};
 }
 
+export async function getFileSignedUrl(
+  fileUrl: string
+): Promise<{ url?: string; error?: string }> {
+  if (isDev()) return { error: "개발 모드에서는 지원되지 않습니다." };
+
+  const sb = await createAdminClient();
+  const marker = `/storage/v1/object/public/${DOC_BUCKET}/`;
+  const markerAlt = `/storage/v1/object/${DOC_BUCKET}/`;
+  let path = "";
+  if (fileUrl.includes(marker)) {
+    path = fileUrl.split(marker)[1];
+  } else if (fileUrl.includes(markerAlt)) {
+    path = fileUrl.split(markerAlt)[1];
+  } else {
+    const urlObj = new URL(fileUrl);
+    const parts = urlObj.pathname.split(`/${DOC_BUCKET}/`);
+    if (parts.length > 1) path = parts[1];
+  }
+
+  if (!path) return { error: "파일 경로를 추출할 수 없습니다." };
+
+  const { data, error } = await sb.storage.from(DOC_BUCKET).createSignedUrl(path, 120);
+  if (error) return { error: error.message };
+  return { url: data.signedUrl };
+}
+
 export async function uploadPublicRegistrationFile(
   fileType: "portrait" | SpeakerFileType,
   formData: FormData

@@ -35,7 +35,7 @@ export function HomepageClient({
             className="hero-grid"
           >
             <div>
-              <div className="eyebrow fade-in">Inside Speakers · Corporate Training Bureau</div>
+              <div className="eyebrow fade-in">Just 강사 · Corporate Training Bureau</div>
               <h1
                 className="serif fade-in"
                 style={{
@@ -62,7 +62,7 @@ export function HomepageClient({
                   animationDelay: "120ms",
                 }}
               >
-                Inside Speakers는 국내 최고의 리더십 · 미래기술 · 인문 소양 · 경제 분야 연사를
+                Just 강사는 국내 최고의 리더십 · 미래기술 · 인문 소양 · 경제 분야 강사를
                 기업 교육 담당자에게 연결합니다. 300여 개 기업이 신뢰한 인물 중심의 큐레이션.
               </p>
               <div
@@ -88,7 +88,7 @@ export function HomepageClient({
                     color: "var(--ink)",
                   }}
                 >
-                  전체 연사 둘러보기
+                  전체 강사 둘러보기
                 </Link>
               </div>
               <div style={{ marginTop: 64, display: "grid", gridTemplateColumns: "repeat(3, auto)", gap: 48 }}>
@@ -233,7 +233,7 @@ export function HomepageClient({
                 className="serif"
                 style={{ marginTop: 14, fontSize: 44, fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.05 }}
               >
-                이번 분기의 주목할 연사
+                이번 분기의 주목할 강사
               </h2>
             </div>
             <Link
@@ -280,7 +280,7 @@ export function HomepageClient({
           >
             <span className="ko">강연은 정보 전달이 아니라</span>{" "}
             <span className="ko" style={{ color: "var(--accent)", fontWeight: 400 }}>의사결정의 전환</span>
-            <span className="ko">입니다. Inside Speakers는 연사의 이름이 아닌, 조직이 얻을 구체적 변화로 매칭을 설계합니다.</span>
+            <span className="ko">입니다. Just 강사는 강사의 이름이 아닌, 조직이 얻을 구체적 변화로 매칭을 설계합니다.</span>
           </blockquote>
           <div style={{ marginTop: 32, display: "flex", gap: 12, alignItems: "center" }}>
             <span style={{ width: 36, height: 1, background: "var(--ink)" }} />
@@ -288,7 +288,7 @@ export function HomepageClient({
               className="en"
               style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-muted)" }}
             >
-              Inside Speakers · Editorial
+              Just 강사 · Editorial
             </span>
           </div>
         </div>
@@ -304,7 +304,7 @@ export function HomepageClient({
                 className="serif"
                 style={{ marginTop: 14, fontSize: 44, fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.05 }}
               >
-                전체 연사 명단
+                전체 강사 명단
               </h2>
             </div>
             <span className="en" style={{ fontSize: 11, letterSpacing: "0.14em", color: "var(--ink-muted)" }}>
@@ -355,7 +355,7 @@ export function HomepageClient({
             </h2>
             <p style={{ marginTop: 24, maxWidth: 520, fontSize: 15, color: "rgba(255,255,255,.7)", lineHeight: 1.65 }}>
               기업명, 일정, 주제를 알려주시면 담당 에이전트가 24시간 이내에 회신합니다.
-              연사 매칭 · 계약 · 현장 운영까지 단일 창구로 진행됩니다.
+              강사 매칭 · 계약 · 현장 운영까지 단일 창구로 진행됩니다.
             </p>
           </div>
           <button

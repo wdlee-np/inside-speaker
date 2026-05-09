@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     const to = process.env.NOTIFICATION_EMAIL ?? "contact@insidecompany.co.kr";
 
     await resend.emails.send({
-      from: "Inside Speakers <noreply@insidecompany.co.kr>",
+      from: "Just 강사 <noreply@insidecompany.co.kr>",
       to,
       subject: `[섭외 문의] ${company} · ${name}`,
       html: [
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         row("연락처", phone || "-"),
         row("희망 일정", eventDate || "-"),
         row("예산 구간", budget || "-"),
-        row("희망 연사 ID", speakerId || "-"),
+        row("희망 강사 ID", speakerId || "-"),
         `<tr><td style="padding:6px 12px;border:1px solid #eee;font-weight:600">메시지</td>`,
         `<td style="padding:6px 12px;border:1px solid #eee;white-space:pre-wrap">${fullMessage ?? "-"}</td></tr>`,
         `</table>`,

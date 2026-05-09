@@ -58,7 +58,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 color: "var(--color-ink)",
               }}
             >
-              INSIDE SPEAKERS
+              JUST 강사
             </div>
             <div
               style={{
