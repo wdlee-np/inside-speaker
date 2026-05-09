@@ -26,7 +26,7 @@ import { useInquiry } from "@/app/(public)/inquiry-context";
 
 const ALL_TABS = [
   { id: "at-a-glance", label: "At a Glance", kr: "핵심 요약" },
-  { id: "videos",      label: "Videos",          kr: "강연 영상" },
+  { id: "videos",      label: "Media",           kr: "미디어 파일" },
   { id: "biography",   label: "Biography",        kr: "상세 프로필" },
   { id: "topics",      label: "Topics",           kr: "강연 주제" },
   { id: "reviews",     label: "Reviews",          kr: "수강 후기" },
@@ -160,7 +160,7 @@ export function SpeakerDetailClient({
                       background: "transparent", border: "1px solid var(--line-strong)", color: "var(--ink)",
                     }}
                   >
-                    <Icon name="play" size={12} /> 강연 영상 보기
+                    <Icon name="play" size={12} /> 미디어 파일 보기
                   </button>
                 )}
               </div>
@@ -226,9 +226,9 @@ export function SpeakerDetailClient({
         </div>
       </DetailSection>
 
-      {/* VIDEOS */}
+      {/* MEDIA */}
       {speaker.videos.length > 0 && (
-        <DetailSection id="videos" index="02" title="강연 영상" eyebrow="Videos" muted>
+        <DetailSection id="videos" index="02" title="미디어 파일" eyebrow="Media" muted>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 32 }} className="videos-grid">
             {speaker.videos.map((v) => {
               const mediaType = v.media_type ?? (getYoutubeId(v.video_url ?? "") ? "youtube" : "video");
