@@ -114,14 +114,26 @@ async function syncPrivate(sb: SbClient, speakerId: string, values: SpeakerFormV
 
   const code = existing?.speaker_code || generateSpeakerCode(values.phone);
 
-  await q.from("speaker_private").upsert({
+  const payload = {
     speaker_id: speakerId,
     speaker_code: code,
     phone: values.phone || null,
     email: values.email || null,
     admin_memo: values.admin_memo || null,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "speaker_id" });
+  };
+
+  let { error } = await q.from("speaker_private").upsert(payload, { onConflict: "speaker_id" });
+
+  // speaker_code UNIQUE 충돌 시 접미사 추가 후 재시도
+  if (error && (error.code === "23505" || String(error.message).toLowerCase().includes("unique"))) {
+    const suffix = Math.random().toString(36).slice(2, 5);
+    const retryCode = generateSpeakerCode(values.phone, undefined, suffix);
+    ({ error } = await q.from("speaker_private").upsert(
+      { ...payload, speaker_code: retryCode },
+      { onConflict: "speaker_id" }
+    ));
+  }
 }
 
 export async function createSpeaker(values: SpeakerFormValues): Promise<{ error?: string }> {

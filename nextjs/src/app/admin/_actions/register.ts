@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
+import { generateSpeakerCode } from "@/lib/queries";
 
 const isDev = () =>
   (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
@@ -62,11 +63,23 @@ export async function publicRegisterSpeaker(
 
   if (error) return { error: (error as { message: string }).message };
 
-  await q.from("speaker_private").insert({
+  const speakerCode = generateSpeakerCode(values.phone);
+  const privatePayload = {
     speaker_id: id,
+    speaker_code: speakerCode,
     phone: values.phone || null,
     email: values.email || null,
-  });
+  };
+  let { error: privateError } = await q.from("speaker_private").insert(privatePayload);
+
+  // speaker_code UNIQUE 충돌 시 접미사 추가 후 재시도
+  if (privateError && (privateError.code === "23505" || String(privateError.message).toLowerCase().includes("unique"))) {
+    const suffix = Math.random().toString(36).slice(2, 5);
+    ({ error: privateError } = await q.from("speaker_private").insert({
+      ...privatePayload,
+      speaker_code: generateSpeakerCode(values.phone, undefined, suffix),
+    }));
+  }
 
   if (values.subcategory_ids.length > 0) {
     await q.from("speaker_subcategories").insert(

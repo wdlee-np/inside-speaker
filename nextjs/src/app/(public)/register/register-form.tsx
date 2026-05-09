@@ -514,6 +514,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             </FormField>
 
             {/* 경력증명서 */}
+            <div style={{ marginTop: 32, paddingTop: 32, borderTop: "1px solid var(--line)" }} />
             <FormField label="경력증명서 (선택)">
               <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 10px" }}>
                 경력증명서 또는 재직증명서 (10MB 이하)
@@ -541,6 +542,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             </FormField>
 
             {/* 학력증명서 */}
+            <div style={{ marginTop: 32, paddingTop: 32, borderTop: "1px solid var(--line)" }} />
             <FormField label="학력증명서 (선택)">
               <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 10px" }}>
                 최종학력증명서 또는 졸업증명서 (10MB 이하)

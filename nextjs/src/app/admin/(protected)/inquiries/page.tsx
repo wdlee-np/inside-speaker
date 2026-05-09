@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getInquiries } from "@/lib/queries";
-import { StatusBadge } from "./_components/status-badge";
+import { getInquiries, getSpeakerInfoMapForInquiries } from "@/lib/queries";
+import { InquiryTable } from "./_components/inquiry-table";
 import type { InquiryStatus } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -14,16 +14,6 @@ const STATUS_LABELS: Record<string, string> = {
   lost: "무산",
 };
 
-const BUDGET_LABELS: Record<string, string> = {
-  AA: "100만↓",
-  AB: "100–500만",
-  A: "500만↓",
-  B: "500–1000만",
-  C: "1000–2000만",
-  D: "2000만↑",
-  X: "미정",
-};
-
 interface Props {
   searchParams: Promise<{ status?: string }>;
 }
@@ -34,23 +24,8 @@ export default async function AdminInquiriesPage({ searchParams }: Props) {
 
   const inquiries = await getInquiries(filter ? { status: filter } : undefined);
 
-  const th: React.CSSProperties = {
-    padding: "10px 16px",
-    textAlign: "left",
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "var(--color-ink-muted)",
-    borderBottom: "2px solid var(--color-line)",
-    whiteSpace: "nowrap",
-  };
-  const td: React.CSSProperties = {
-    padding: "14px 16px",
-    verticalAlign: "middle",
-    fontSize: 13,
-    borderBottom: "1px solid var(--color-line)",
-  };
+  const speakerIds = [...new Set(inquiries.map((i) => i.desired_speaker).filter(Boolean) as string[])];
+  const speakerMap = await getSpeakerInfoMapForInquiries(speakerIds);
 
   return (
     <div style={{ padding: "40px 48px" }}>
@@ -94,62 +69,7 @@ export default async function AdminInquiriesPage({ searchParams }: Props) {
           문의가 없습니다.
         </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={th}>접수일</th>
-                <th style={th}>기업</th>
-                <th style={th}>담당자</th>
-                <th style={th}>연락처</th>
-                <th style={th}>희망 강사</th>
-                <th style={th}>예산</th>
-                <th style={th}>상태</th>
-                <th style={th}>메모</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inquiries.map((inq) => (
-                <tr key={inq.id} style={{ background: "var(--color-surface)" }}>
-                  <td style={{ ...td, color: "var(--color-ink-muted)", whiteSpace: "nowrap" }}>
-                    {inq.created_at.slice(0, 10)}
-                  </td>
-                  <td style={td}>
-                    <div style={{ fontWeight: 600 }}>{inq.company}</div>
-                    {inq.department && (
-                      <div style={{ fontSize: 12, color: "var(--color-ink-muted)", marginTop: 2 }}>
-                        {inq.department}
-                      </div>
-                    )}
-                  </td>
-                  <td style={td}>
-                    <div>{inq.contact_name}</div>
-                    <div style={{ fontSize: 12, color: "var(--color-ink-muted)", marginTop: 2 }}>
-                      {inq.email}
-                    </div>
-                  </td>
-                  <td style={{ ...td, whiteSpace: "nowrap" }}>{inq.phone || "-"}</td>
-                  <td style={{ ...td, color: inq.desired_speaker ? "var(--color-ink)" : "var(--color-ink-muted)" }}>
-                    {inq.desired_speaker || "미지정"}
-                  </td>
-                  <td style={{ ...td, whiteSpace: "nowrap" }}>
-                    {inq.budget_range ? (BUDGET_LABELS[inq.budget_range] ?? inq.budget_range) : "-"}
-                  </td>
-                  <td style={td}>
-                    <StatusBadge id={inq.id} status={inq.status} />
-                  </td>
-                  <td style={{ ...td, maxWidth: 200 }}>
-                    {inq.internal_memo ? (
-                      <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>{inq.internal_memo}</span>
-                    ) : (
-                      <span style={{ fontSize: 12, color: "var(--color-line)" }}>-</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <InquiryTable inquiries={inquiries} speakerMap={speakerMap} />
       )}
     </div>
   );

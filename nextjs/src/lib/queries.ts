@@ -389,12 +389,13 @@ export const getSpeakerWithPrivate = cache(async (id: string): Promise<SpeakerWi
 });
 
 // REQ-2: 강사 코드 생성 유틸
-export function generateSpeakerCode(phone: string, registeredAt?: Date): string {
+export function generateSpeakerCode(phone: string, registeredAt?: Date, suffix?: string): string {
   const now = registeredAt ?? new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const last4 = phone.replace(/\D/g, "").slice(-4).padStart(4, "0");
-  return `${yy}${mm}_${last4}`;
+  const base = `${yy}${mm}_${last4}`;
+  return suffix ? `${base}_${suffix}` : base;
 }
 
 // REQ-3: 강사 코드 맵 (speakerId → speaker_code)
@@ -407,6 +408,31 @@ export const getSpeakerCodeMap = cache(async (): Promise<Record<string, string>>
   const rows = (data ?? []) as Array<{ speaker_id: string; speaker_code: string }>;
   return Object.fromEntries(rows.map((r) => [r.speaker_id, r.speaker_code]));
 });
+
+// 섭외 문의 어드민용: 강사 ID → { name, speaker_code } 맵 (서비스 롤로 조회)
+export type SpeakerInfoEntry = { name: string; speaker_code: string | null };
+export async function getSpeakerInfoMapForInquiries(
+  speakerIds: string[]
+): Promise<Record<string, SpeakerInfoEntry>> {
+  if (speakerIds.length === 0) return {};
+  const { createAdminClient } = await import("@/lib/supabase/server");
+  const sb = await createAdminClient();
+  const q = sb as any;
+
+  const [{ data: speakerRows }, { data: privateRows }] = await Promise.all([
+    q.from("speakers").select("id, name").in("id", speakerIds),
+    q.from("speaker_private").select("speaker_id, speaker_code").in("speaker_id", speakerIds),
+  ]);
+
+  const codeBySpId: Record<string, string> = {};
+  for (const r of (privateRows ?? [])) codeBySpId[r.speaker_id] = r.speaker_code;
+
+  const result: Record<string, SpeakerInfoEntry> = {};
+  for (const r of (speakerRows ?? [])) {
+    result[r.id] = { name: r.name, speaker_code: codeBySpId[r.id] ?? null };
+  }
+  return result;
+}
 
 // ── REQ-5: 어드민 상태별 강사 수 집계 ──
 export const getSpeakerStatusCounts = cache(async (): Promise<Record<SpeakerStatus | "all", number>> => {
