@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { SpeakerFileType } from "@/lib/database.types";
 
 const BUCKET = "speaker-images";
@@ -78,4 +78,34 @@ export async function uploadSpeakerFile(
 
   if (dbError) return { error: dbError.message };
   return {};
+}
+
+export async function uploadPublicRegistrationFile(
+  fileType: "portrait" | SpeakerFileType,
+  formData: FormData
+): Promise<{ url?: string; path?: string; name?: string; size?: number; error?: string }> {
+  if (isDev()) return { error: "개발 모드에서는 업로드가 지원되지 않습니다." };
+
+  const file = formData.get("file") as File | null;
+  if (!file) return { error: "파일이 없습니다." };
+
+  const sb = await createAdminClient();
+
+  if (fileType === "portrait") {
+    if (!file.type.startsWith("image/")) return { error: "이미지 파일만 업로드 가능합니다." };
+    if (file.size > 5 * 1024 * 1024) return { error: "이미지 크기는 5MB 이하여야 합니다." };
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const filename = `${FOLDER}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await sb.storage.from(BUCKET).upload(filename, file, { contentType: file.type, upsert: false });
+    if (error) return { error: error.message };
+    const { data } = sb.storage.from(BUCKET).getPublicUrl(filename);
+    return { url: data.publicUrl };
+  } else {
+    if (file.size > MAX_FILE_BYTES) return { error: "파일 크기는 10MB 이하여야 합니다." };
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+    const filename = `reg/${fileType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await sb.storage.from(DOC_BUCKET).upload(filename, file, { contentType: file.type, upsert: false });
+    if (error) return { error: error.message };
+    return { path: filename, name: file.name, size: file.size };
+  }
 }

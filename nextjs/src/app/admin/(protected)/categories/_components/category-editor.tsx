@@ -381,17 +381,19 @@ function InlineField({
   onSave: (v: string) => Promise<{ error?: string }>;
 }) {
   const [editing, setEditing] = useState(false);
+  const [committed, setCommitted] = useState(value);
   const [draft, setDraft] = useState(value);
   const [isPending, startTransition] = useTransition();
 
   const commit = () => {
-    if (draft === value) { setEditing(false); return; }
+    if (draft === committed) { setEditing(false); return; }
     startTransition(async () => {
       const result = await onSave(draft);
       if (result.error) {
         toast.error(result.error);
-        setDraft(value);
+        setDraft(committed);
       } else {
+        setCommitted(draft);
         toast.success("저장되었습니다.");
       }
       setEditing(false);
@@ -399,7 +401,7 @@ function InlineField({
   };
 
   const cancel = () => {
-    setDraft(value);
+    setDraft(committed);
     setEditing(false);
   };
 
@@ -433,13 +435,13 @@ function InlineField({
         style={{
           padding: "6px 10px", fontSize: 13,
           border: "1px solid transparent", minHeight: 32,
-          color: value ? "var(--color-ink)" : "var(--color-ink-muted)",
+          color: committed ? "var(--color-ink)" : "var(--color-ink-muted)",
           borderRadius: 2, transition: "border-color 150ms",
         }}
         onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "var(--color-line)")}
         onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "transparent")}
       >
-        {value || <em style={{ color: "var(--color-line)", fontStyle: "normal" }}>{placeholder ?? "—"}</em>}
+        {committed || <em style={{ color: "var(--color-line)", fontStyle: "normal" }}>{placeholder ?? "—"}</em>}
       </div>
     </div>
   );

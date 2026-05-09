@@ -1,24 +1,37 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import type { CategoryWithSubs } from "@/lib/database.types";
 import { publicRegisterSpeaker, type PublicRegisterValues } from "@/app/admin/_actions/register";
+import { uploadPublicRegistrationFile } from "@/app/admin/_actions/upload";
 import { Icon } from "@/components/icon";
 
 interface Props {
   categoriesWithSubs: CategoryWithSubs[];
 }
 
+interface UploadedDoc {
+  path: string;
+  name: string;
+  size: number;
+}
+
+type UploadingKey = "portrait" | "lecture_material" | "career_cert" | "edu_cert" | null;
+
 export function RegisterForm({ categoriesWithSubs }: Props) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingKey, setUploadingKey] = useState<UploadingKey>(null);
 
   const [name, setName] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [title, setTitle] = useState("");
   const [tagline, setTagline] = useState("");
+
+  const [portraitMode, setPortraitMode] = useState<"file" | "url">("file");
   const [portraitUrl, setPortraitUrl] = useState("");
+
   const [statsTalks, setStatsTalks] = useState("");
   const [statsCompanies, setStatsCompanies] = useState("");
   const [statsYears, setStatsYears] = useState("");
@@ -27,14 +40,59 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
   const [subcategoryIds, setSubcategoryIds] = useState<string[]>([]);
   const [careers, setCareers] = useState<{ year: string; role: string }[]>([{ year: "", role: "" }]);
 
+  const [videos, setVideos] = useState<{ title: string; video_url: string; media_type: "video" | "audio" | "youtube" }[]>([]);
+  const [lectureFiles, setLectureFiles] = useState<UploadedDoc[]>([]);
+  const [careerCert, setCareerCert] = useState<UploadedDoc | null>(null);
+  const [eduCert, setEduCert] = useState<UploadedDoc | null>(null);
+
   const toggleSub = (id: string) =>
     setSubcategoryIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
+  const handleFileChange = async (
+    key: "portrait" | "lecture_material" | "career_cert" | "edu_cert",
+    e: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    if (key === "lecture_material" && lectureFiles.length >= 5) {
+      setError("강의 자료는 최대 5개까지 업로드할 수 있습니다.");
+      return;
+    }
+
+    setError(null);
+    setUploadingKey(key);
+    const fd = new FormData();
+    fd.append("file", file);
+    const result = await uploadPublicRegistrationFile(key, fd);
+    setUploadingKey(null);
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    if (key === "portrait") {
+      setPortraitUrl(result.url!);
+    } else if (key === "lecture_material") {
+      setLectureFiles((prev) => [...prev, { path: result.path!, name: result.name!, size: result.size! }]);
+    } else if (key === "career_cert") {
+      setCareerCert({ path: result.path!, name: result.name!, size: result.size! });
+    } else if (key === "edu_cert") {
+      setEduCert({ path: result.path!, name: result.name!, size: result.size! });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || !title) return;
+    if (lectureFiles.length === 0) {
+      setError("강의 자료를 1개 이상 업로드해주세요.");
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -52,6 +110,10 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
       topics: topics.filter(Boolean),
       subcategory_ids: subcategoryIds,
       careers: careers.filter((c) => c.year && c.role),
+      videos: videos.filter((v) => v.video_url && v.title),
+      lecture_files: lectureFiles,
+      career_cert: careerCert,
+      edu_cert: eduCert,
     };
 
     const result = await publicRegisterSpeaker(values);
@@ -74,7 +136,10 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
     outline: "none",
     fontFamily: "var(--font-kr)",
     borderRadius: 4,
+    boxSizing: "border-box",
   };
+
+  const canSubmit = !submitting && !!name && !!title && lectureFiles.length > 0;
 
   if (submitted) {
     return (
@@ -131,10 +196,69 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
               <FormField label="태그라인" span={2}>
                 <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="&quot;변화는 기다리는 것이 아니라 만드는 것입니다.&quot;" style={field} />
               </FormField>
-              <FormField label="프로필 이미지 URL" span={2}>
-                <input value={portraitUrl} onChange={(e) => setPortraitUrl(e.target.value)} placeholder="https://example.com/photo.jpg" style={field} />
-              </FormField>
             </Grid>
+          </FormSection>
+
+          {/* 프로필 이미지 */}
+          <FormSection title="프로필 이미지">
+            <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+              {(["file", "url"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => { setPortraitMode(m); setPortraitUrl(""); }}
+                  style={{
+                    padding: "5px 14px", fontSize: 12, fontWeight: 500,
+                    background: portraitMode === m ? "var(--accent, #14756b)" : "transparent",
+                    color: portraitMode === m ? "#fff" : "var(--ink-muted)",
+                    border: `1px solid ${portraitMode === m ? "var(--accent, #14756b)" : "var(--line)"}`,
+                    borderRadius: 4, cursor: "pointer",
+                  }}
+                >
+                  {m === "file" ? "파일 업로드" : "URL 입력"}
+                </button>
+              ))}
+            </div>
+
+            {portraitMode === "url" ? (
+              <input
+                value={portraitUrl}
+                onChange={(e) => setPortraitUrl(e.target.value)}
+                placeholder="https://example.com/photo.jpg"
+                style={field}
+              />
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 18px", fontSize: 13, fontWeight: 500,
+                  background: "transparent", color: "var(--ink)",
+                  border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer",
+                  opacity: uploadingKey === "portrait" ? 0.6 : 1,
+                }}>
+                  <Icon name="plus" size={14} />
+                  {uploadingKey === "portrait" ? "업로드 중…" : "이미지 선택"}
+                  <input
+                    type="file" accept="image/*" style={{ display: "none" }}
+                    disabled={uploadingKey === "portrait"}
+                    onChange={(e) => handleFileChange("portrait", e)}
+                  />
+                </label>
+                {portraitUrl && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={portraitUrl} alt="portrait preview" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4, border: "1px solid var(--line)" }} />
+                    <button
+                      type="button"
+                      onClick={() => setPortraitUrl("")}
+                      style={{ ...removeBtn }}
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </FormSection>
 
           {/* 소개글 */}
@@ -235,7 +359,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             </Grid>
           </FormSection>
 
-          {/* 카테고리 */}
+          {/* 전문 분야 */}
           <FormSection title="전문 분야">
             {categoriesWithSubs.map((cat) => (
               <div key={cat.id} style={{ marginBottom: 16 }}>
@@ -270,6 +394,156 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             ))}
           </FormSection>
 
+          {/* 영상 자료 */}
+          <FormSection title="영상 자료 (선택)">
+            <p style={{ fontSize: 13, color: "var(--ink-muted)", marginBottom: 16, marginTop: 0 }}>
+              강의·인터뷰 영상 또는 음성 자료의 URL을 입력하세요.
+            </p>
+            {videos.map((v, i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto auto", gap: 8, marginBottom: 10, alignItems: "center" }}>
+                <input
+                  value={v.title}
+                  onChange={(e) => {
+                    const next = [...videos];
+                    next[i] = { ...next[i], title: e.target.value };
+                    setVideos(next);
+                  }}
+                  placeholder="영상 제목"
+                  style={field}
+                />
+                <input
+                  value={v.video_url}
+                  onChange={(e) => {
+                    const next = [...videos];
+                    next[i] = { ...next[i], video_url: e.target.value };
+                    setVideos(next);
+                  }}
+                  placeholder="https://youtube.com/watch?v=..."
+                  style={field}
+                />
+                <select
+                  value={v.media_type}
+                  onChange={(e) => {
+                    const next = [...videos];
+                    next[i] = { ...next[i], media_type: e.target.value as "video" | "audio" | "youtube" };
+                    setVideos(next);
+                  }}
+                  style={{ ...field, width: "auto", paddingRight: 24 }}
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="video">영상</option>
+                  <option value="audio">음성</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setVideos(videos.filter((_, j) => j !== i))}
+                  style={removeBtn}
+                >
+                  <Icon name="close" size={14} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setVideos([...videos, { title: "", video_url: "", media_type: "youtube" }])}
+              style={addBtn}
+            >
+              + 영상 추가
+            </button>
+          </FormSection>
+
+          {/* 첨부 파일 */}
+          <FormSection title="첨부 파일">
+            {/* 강의 자료 */}
+            <FormField label="강의 자료" required>
+              <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 10px" }}>
+                강의계획서, 강의안 등 최대 5개 (PDF, PPT, DOC 등 / 파일당 10MB 이하)
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                {lectureFiles.map((f, i) => (
+                  <FileItem
+                    key={i}
+                    name={f.name}
+                    size={f.size}
+                    onRemove={() => setLectureFiles(lectureFiles.filter((_, j) => j !== i))}
+                  />
+                ))}
+              </div>
+              {lectureFiles.length < 5 && (
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 18px", fontSize: 13, fontWeight: 500,
+                  background: "transparent", color: "var(--ink)",
+                  border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer",
+                  opacity: uploadingKey === "lecture_material" ? 0.6 : 1,
+                }}>
+                  <Icon name="plus" size={14} />
+                  {uploadingKey === "lecture_material" ? "업로드 중…" : "파일 추가"}
+                  <input
+                    type="file"
+                    style={{ display: "none" }}
+                    disabled={uploadingKey === "lecture_material"}
+                    onChange={(e) => handleFileChange("lecture_material", e)}
+                  />
+                </label>
+              )}
+            </FormField>
+
+            {/* 경력증명서 */}
+            <FormField label="경력증명서 (선택)">
+              <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 10px" }}>
+                경력증명서 또는 재직증명서 (10MB 이하)
+              </p>
+              {careerCert ? (
+                <FileItem name={careerCert.name} size={careerCert.size} onRemove={() => setCareerCert(null)} />
+              ) : (
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 18px", fontSize: 13, fontWeight: 500,
+                  background: "transparent", color: "var(--ink)",
+                  border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer",
+                  opacity: uploadingKey === "career_cert" ? 0.6 : 1,
+                }}>
+                  <Icon name="plus" size={14} />
+                  {uploadingKey === "career_cert" ? "업로드 중…" : "파일 선택"}
+                  <input
+                    type="file"
+                    style={{ display: "none" }}
+                    disabled={uploadingKey === "career_cert"}
+                    onChange={(e) => handleFileChange("career_cert", e)}
+                  />
+                </label>
+              )}
+            </FormField>
+
+            {/* 학력증명서 */}
+            <FormField label="학력증명서 (선택)">
+              <p style={{ fontSize: 12, color: "var(--ink-muted)", margin: "0 0 10px" }}>
+                최종학력증명서 또는 졸업증명서 (10MB 이하)
+              </p>
+              {eduCert ? (
+                <FileItem name={eduCert.name} size={eduCert.size} onRemove={() => setEduCert(null)} />
+              ) : (
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 18px", fontSize: 13, fontWeight: 500,
+                  background: "transparent", color: "var(--ink)",
+                  border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer",
+                  opacity: uploadingKey === "edu_cert" ? 0.6 : 1,
+                }}>
+                  <Icon name="plus" size={14} />
+                  {uploadingKey === "edu_cert" ? "업로드 중…" : "파일 선택"}
+                  <input
+                    type="file"
+                    style={{ display: "none" }}
+                    disabled={uploadingKey === "edu_cert"}
+                    onChange={(e) => handleFileChange("edu_cert", e)}
+                  />
+                </label>
+              )}
+            </FormField>
+          </FormSection>
+
           {error && (
             <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, color: "#b91c1c", fontSize: 13, marginBottom: 16 }}>
               {error}
@@ -279,11 +553,11 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 8 }}>
             <button
               type="submit"
-              disabled={submitting || !name || !title}
+              disabled={!canSubmit}
               style={{
                 padding: "12px 32px", fontSize: 14, fontWeight: 600,
-                background: submitting || !name || !title ? "var(--ink-muted)" : "var(--accent)",
-                color: "#fff", border: "none", cursor: submitting || !name || !title ? "not-allowed" : "pointer",
+                background: canSubmit ? "var(--accent)" : "var(--ink-muted)",
+                color: "#fff", border: "none", cursor: canSubmit ? "pointer" : "not-allowed",
                 display: "inline-flex", alignItems: "center", gap: 8,
               }}
             >
@@ -296,10 +570,31 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
   );
 }
 
+function FileItem({ name, size, onRemove }: { name: string; size: number; onRemove: () => void }) {
+  const kb = size / 1024;
+  const label = kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(0)} KB`;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "8px 12px",
+      background: "var(--bg, #faf9f6)",
+      border: "1px solid var(--line)",
+      borderRadius: 4, fontSize: 13,
+    }}>
+      <Icon name="bookmark" size={14} />
+      <span style={{ flex: 1, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+      <span style={{ color: "var(--ink-muted)", fontSize: 11, flexShrink: 0 }}>{label}</span>
+      <button type="button" onClick={onRemove} style={{ ...removeBtn, width: 24, height: 24 }}>
+        <Icon name="close" size={12} />
+      </button>
+    </div>
+  );
+}
+
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 32, paddingBottom: 32, borderBottom: "1px solid var(--line)" }}>
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", marginBottom: 20, margin: "0 0 20px" }}>{title}</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", margin: "0 0 20px" }}>{title}</h2>
       {children}
     </div>
   );

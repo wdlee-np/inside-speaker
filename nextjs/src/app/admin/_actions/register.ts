@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 const isDev = () =>
   (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
@@ -19,6 +19,10 @@ export type PublicRegisterValues = {
   topics: string[];
   subcategory_ids: string[];
   careers: { year: string; role: string }[];
+  videos: { title: string; video_url: string; media_type: "video" | "audio" | "youtube" }[];
+  lecture_files: { path: string; name: string; size: number }[];
+  career_cert: { path: string; name: string; size: number } | null;
+  edu_cert: { path: string; name: string; size: number } | null;
 };
 
 function generateId(): string {
@@ -30,7 +34,7 @@ export async function publicRegisterSpeaker(
 ): Promise<{ error?: string }> {
   if (isDev()) return { error: "개발 모드에서는 저장이 지원되지 않습니다." };
 
-  const sb = await createClient();
+  const sb = await createAdminClient();
   const q = sb as any;
   const id = generateId();
 
@@ -75,6 +79,61 @@ export async function publicRegisterSpeaker(
     }));
   if (careerRows.length > 0) {
     await q.from("speaker_careers").insert(careerRows);
+  }
+
+  const videoRows = values.videos
+    .filter((v) => v.video_url && v.title)
+    .map((v, i) => ({
+      speaker_id: id,
+      title: v.title,
+      video_url: v.video_url,
+      media_type: v.media_type,
+      sort_order: i,
+    }));
+  if (videoRows.length > 0) {
+    await q.from("speaker_videos").insert(videoRows);
+  }
+
+  type FileRow = {
+    speaker_id: string;
+    file_type: string;
+    file_url: string;
+    file_name: string;
+    file_size: number;
+    sort_order: number;
+  };
+  const fileRows: FileRow[] = [
+    ...values.lecture_files.map((f, i) => ({
+      speaker_id: id,
+      file_type: "lecture_material",
+      file_url: f.path,
+      file_name: f.name,
+      file_size: f.size,
+      sort_order: i,
+    })),
+    ...(values.career_cert
+      ? [{
+          speaker_id: id,
+          file_type: "career_cert",
+          file_url: values.career_cert.path,
+          file_name: values.career_cert.name,
+          file_size: values.career_cert.size,
+          sort_order: 0,
+        }]
+      : []),
+    ...(values.edu_cert
+      ? [{
+          speaker_id: id,
+          file_type: "edu_cert",
+          file_url: values.edu_cert.path,
+          file_name: values.edu_cert.name,
+          file_size: values.edu_cert.size,
+          sort_order: 0,
+        }]
+      : []),
+  ];
+  if (fileRows.length > 0) {
+    await q.from("speaker_files").insert(fileRows);
   }
 
   revalidatePath("/admin/speakers");

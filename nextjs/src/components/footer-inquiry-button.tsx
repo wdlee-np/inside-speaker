@@ -9,7 +9,6 @@ export function FooterInquiryButton() {
     <button
       onClick={() => openInquiry()}
       style={{
-        marginTop: 28,
         display: "inline-flex",
         alignItems: "center",
         gap: 10,

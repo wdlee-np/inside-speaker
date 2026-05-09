@@ -26,7 +26,20 @@ export function Footer({ categories }: FooterProps) {
               <br />
               조직의 10년을 바꿉니다.
             </p>
-            <FooterInquiryButton />
+            <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
+              <Link
+                href="/register"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 10,
+                  padding: "14px 22px", fontSize: 13, fontWeight: 600,
+                  background: "transparent", color: "var(--ink)",
+                  border: "1px solid var(--ink)", textDecoration: "none",
+                }}
+              >
+                <Icon name="plus" size={14} /> 강사 등록
+              </Link>
+              <FooterInquiryButton />
+            </div>
           </div>
 
           <div>

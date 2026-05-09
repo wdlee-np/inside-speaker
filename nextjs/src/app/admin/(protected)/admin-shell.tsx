@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/icon";
 
 const navItems = [
-  { href: "/admin/speakers", label: "연사 관리", icon: "user" as const },
+  { href: "/admin/speakers", label: "강사 관리", icon: "user" as const },
   { href: "/admin/categories", label: "카테고리", icon: "grid" as const },
   { href: "/admin/inquiries", label: "섭외 문의", icon: "mail" as const },
   { href: "/admin/members", label: "회원 관리", icon: "bookmark" as const },
