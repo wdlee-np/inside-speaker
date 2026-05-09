@@ -12,6 +12,8 @@ export type PublicRegisterValues = {
   title: string;
   tagline: string;
   portrait_url: string;
+  phone: string;
+  email: string;
   stats_talks: number;
   stats_companies: number;
   stats_years: number;
@@ -59,6 +61,12 @@ export async function publicRegisterSpeaker(
   });
 
   if (error) return { error: (error as { message: string }).message };
+
+  await q.from("speaker_private").insert({
+    speaker_id: id,
+    phone: values.phone || null,
+    email: values.email || null,
+  });
 
   if (values.subcategory_ids.length > 0) {
     await q.from("speaker_subcategories").insert(

@@ -239,6 +239,12 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 style={inp()}
               />
             </Field>
+            <Field label="연락처 (전화)">
+              <input {...register("phone")} placeholder="010-0000-0000" style={inp()} />
+            </Field>
+            <Field label="이메일">
+              <input {...register("email")} type="email" placeholder="speaker@example.com" style={inp()} />
+            </Field>
           </FieldGrid>
         </Section>
 
@@ -883,12 +889,6 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 </div>
               </Field>
             )}
-            <Field label="연락처 (전화)">
-              <input {...register("phone")} placeholder="010-0000-0000" style={inp()} />
-            </Field>
-            <Field label="이메일">
-              <input {...register("email")} type="email" placeholder="speaker@example.com" style={inp()} />
-            </Field>
             <Field label="어드민 메모" span={2}>
               <textarea
                 {...register("admin_memo")}

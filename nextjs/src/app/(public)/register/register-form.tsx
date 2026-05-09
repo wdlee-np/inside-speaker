@@ -28,6 +28,8 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
   const [nameEn, setNameEn] = useState("");
   const [title, setTitle] = useState("");
   const [tagline, setTagline] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
 
   const [portraitMode, setPortraitMode] = useState<"file" | "url">("file");
   const [portraitUrl, setPortraitUrl] = useState("");
@@ -88,7 +90,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name || !title) return;
+    if (!name || !title || !phone || !email) return;
     if (lectureFiles.length === 0) {
       setError("강의 자료를 1개 이상 업로드해주세요.");
       return;
@@ -103,6 +105,8 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
       title,
       tagline,
       portrait_url: portraitUrl,
+      phone,
+      email,
       stats_talks: parseInt(statsTalks) || 0,
       stats_companies: parseInt(statsCompanies) || 0,
       stats_years: parseInt(statsYears) || 0,
@@ -139,7 +143,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
     boxSizing: "border-box",
   };
 
-  const canSubmit = !submitting && !!name && !!title && lectureFiles.length > 0;
+  const canSubmit = !submitting && !!name && !!title && !!phone && !!email && lectureFiles.length > 0;
 
   if (submitted) {
     return (
@@ -195,6 +199,26 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
               </FormField>
               <FormField label="태그라인" span={2}>
                 <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="&quot;변화는 기다리는 것이 아니라 만드는 것입니다.&quot;" style={field} />
+              </FormField>
+              <FormField label="연락처 (전화)" required>
+                <input
+                  required
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="010-0000-0000"
+                  style={field}
+                />
+              </FormField>
+              <FormField label="이메일" required>
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="speaker@example.com"
+                  style={field}
+                />
               </FormField>
             </Grid>
           </FormSection>
