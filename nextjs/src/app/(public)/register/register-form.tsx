@@ -418,8 +418,8 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
             ))}
           </FormSection>
 
-          {/* 영상 자료 */}
-          <FormSection title="영상 자료 (선택)">
+          {/* 미디어 자료 */}
+          <FormSection title="미디어 자료 (선택)">
             <p style={{ fontSize: 13, color: "var(--ink-muted)", marginBottom: 16, marginTop: 0 }}>
               강의·인터뷰 영상 또는 음성 자료의 URL을 입력하세요.
             </p>
@@ -472,7 +472,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
               onClick={() => setVideos([...videos, { title: "", video_url: "", media_type: "youtube" }])}
               style={addBtn}
             >
-              + 영상 추가
+              + 미디어 추가
             </button>
           </FormSection>
 

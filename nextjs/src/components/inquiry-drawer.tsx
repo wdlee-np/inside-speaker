@@ -198,7 +198,6 @@ function InquiryForm({
             <option value="">선택해 주세요</option>
             <option value="AA">100만원 이하</option>
             <option value="AB">100–500만원</option>
-            <option value="A">500만원 이하</option>
             <option value="B">500–1,000만원</option>
             <option value="C">1,000–2,000만원</option>
             <option value="D">2,000만원 이상</option>

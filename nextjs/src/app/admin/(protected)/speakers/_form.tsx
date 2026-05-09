@@ -190,11 +190,6 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>
             {mode === "create" ? "새 강사 추가" : "강사 수정"}
           </h1>
-          {mode === "edit" && (
-            <p style={{ marginTop: 4, fontSize: 13, color: "var(--color-ink-muted)" }}>
-              ID: {defaultValues.id}
-            </p>
-          )}
         </div>
 
         {/* 기본 정보 */}
@@ -624,8 +619,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           </button>
         </Section>
 
-        {/* 영상 */}
-        <Section title="영상">
+        {/* 미디어 자료 */}
+        <Section title="미디어 자료">
           {videos.map((v, i) => (
             <div
               key={i}
@@ -648,7 +643,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 <span
                   style={{ fontSize: 11, fontWeight: 600, color: "var(--color-ink-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
-                  영상 {i + 1}
+                  미디어 {i + 1}
                 </span>
                 <button
                   type="button"
@@ -810,7 +805,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
             }
             style={addBtn}
           >
-            + 영상 추가
+            + 미디어 추가
           </button>
         </Section>
 

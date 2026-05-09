@@ -84,22 +84,33 @@ export async function getFileSignedUrl(
   fileUrl: string
 ): Promise<{ url?: string; error?: string }> {
   if (isDev()) return { error: "개발 모드에서는 지원되지 않습니다." };
+  if (!fileUrl) return { error: "파일 URL이 없습니다." };
 
   const sb = await createAdminClient();
-  const marker = `/storage/v1/object/public/${DOC_BUCKET}/`;
-  const markerAlt = `/storage/v1/object/${DOC_BUCKET}/`;
-  let path = "";
-  if (fileUrl.includes(marker)) {
-    path = fileUrl.split(marker)[1];
-  } else if (fileUrl.includes(markerAlt)) {
-    path = fileUrl.split(markerAlt)[1];
+  let path: string;
+
+  if (fileUrl.startsWith("http")) {
+    // 풀 URL에서 버킷 내 경로 추출
+    const marker = `/storage/v1/object/public/${DOC_BUCKET}/`;
+    if (fileUrl.includes(marker)) {
+      path = fileUrl.split(marker)[1];
+    } else {
+      try {
+        const urlObj = new URL(fileUrl);
+        const parts = urlObj.pathname.split(`/${DOC_BUCKET}/`);
+        if (parts.length < 2) return { error: "파일 경로를 추출할 수 없습니다." };
+        path = parts.slice(1).join(`/${DOC_BUCKET}/`);
+      } catch {
+        return { error: "잘못된 파일 URL입니다." };
+      }
+    }
   } else {
-    const urlObj = new URL(fileUrl);
-    const parts = urlObj.pathname.split(`/${DOC_BUCKET}/`);
-    if (parts.length > 1) path = parts[1];
+    // 이미 상대 경로 (공개 등록 업로드 파일)
+    path = fileUrl;
   }
 
-  if (!path) return { error: "파일 경로를 추출할 수 없습니다." };
+  // 쿼리스트링 제거 후 URL 디코딩
+  path = decodeURIComponent(path.split("?")[0]);
 
   const { data, error } = await sb.storage.from(DOC_BUCKET).createSignedUrl(path, 120);
   if (error) return { error: error.message };

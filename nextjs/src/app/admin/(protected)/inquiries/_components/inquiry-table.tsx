@@ -9,7 +9,6 @@ import type { SpeakerInfoEntry } from "@/lib/queries";
 const BUDGET_LABELS: Record<string, string> = {
   AA: "100만↓",
   AB: "100–500만",
-  A: "500만↓",
   B: "500–1000만",
   C: "1000–2000만",
   D: "2000만↑",
