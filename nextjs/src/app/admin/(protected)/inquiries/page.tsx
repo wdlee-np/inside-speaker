@@ -15,6 +15,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const BUDGET_LABELS: Record<string, string> = {
+  AA: "100만↓",
+  AB: "100–500만",
   A: "500만↓",
   B: "500–1000만",
   C: "1000–2000만",
@@ -100,7 +102,7 @@ export default async function AdminInquiriesPage({ searchParams }: Props) {
                 <th style={th}>기업</th>
                 <th style={th}>담당자</th>
                 <th style={th}>연락처</th>
-                <th style={th}>희망 연사</th>
+                <th style={th}>희망 강사</th>
                 <th style={th}>예산</th>
                 <th style={th}>상태</th>
                 <th style={th}>메모</th>

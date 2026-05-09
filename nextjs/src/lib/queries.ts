@@ -7,11 +7,15 @@ import type {
   SpeakerCareer,
   SpeakerSubcategory,
   SpeakerWithRelations,
+  SpeakerPrivate,
+  SpeakerFile,
+  SpeakerWithPrivate,
   Category,
   CategoryWithSubs,
   Subcategory,
   Inquiry,
   InquiryStatus,
+  SpeakerStatus,
 } from "@/lib/database.types";
 import {
   SEED_SPEAKERS,
@@ -44,20 +48,24 @@ function seedToSpeaker(s: SeedSpeaker): Speaker {
     topics: s.topics,
     bio: s.bio,
     recommended_ids: [],
+    speaker_status: s.speaker_status,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
     deleted_at: null,
   };
 }
 
+// REQ-5: 공개 쿼리는 '노출' 상태 강사만 반환
 export const getSpeakers = cache(async (opts?: {
   categoryId?: string;
   subcategoryId?: string;
   featured?: boolean;
   limit?: number;
+  adminAll?: boolean; // 어드민 전용: 모든 상태 조회
 }): Promise<Speaker[]> => {
   if (isDev()) {
     let seeds = SEED_SPEAKERS;
+    if (!opts?.adminAll) seeds = seeds.filter((s) => s.speaker_status === "노출");
     if (opts?.featured !== undefined) seeds = seeds.filter((s) => s.featured === opts.featured);
     if (opts?.subcategoryId) seeds = seeds.filter((s) => s.subcategory_ids.includes(opts.subcategoryId!));
     if (opts?.categoryId) {
@@ -77,6 +85,8 @@ export const getSpeakers = cache(async (opts?: {
     .is("deleted_at", null)
     .order("display_order", { ascending: true });
 
+  // 어드민 아닐 때는 노출 상태만 (DB RLS로도 처리되지만 명시)
+  if (!opts?.adminAll) query = (query as any).eq("speaker_status", "노출");
   if (opts?.featured !== undefined) query = query.eq("featured", opts.featured);
   if (opts?.limit) query = query.limit(opts.limit);
 
@@ -319,4 +329,92 @@ export const getInquiries = cache(async (opts?: {
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as Inquiry[];
+});
+
+// ── REQ-2: 어드민 전용 강사 조회 (모든 상태 + private 데이터) ──
+
+export const getAdminSpeakers = cache(async (opts?: {
+  speakerStatus?: SpeakerStatus;
+}): Promise<Speaker[]> => {
+  if (isDev()) {
+    let seeds = SEED_SPEAKERS;
+    if (opts?.speakerStatus) seeds = seeds.filter((s) => s.speaker_status === opts.speakerStatus);
+    return seeds.map(seedToSpeaker);
+  }
+
+  const supabase = await createClient();
+  let query = (supabase as any)
+    .from("speakers")
+    .select("*")
+    .is("deleted_at", null)
+    .order("display_order", { ascending: true });
+
+  if (opts?.speakerStatus) query = query.eq("speaker_status", opts.speakerStatus);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Speaker[];
+});
+
+export const getSpeakerPrivate = cache(async (speakerId: string): Promise<SpeakerPrivate | null> => {
+  if (isDev()) return null;
+  const supabase = await createClient();
+  const { data } = await (supabase as any)
+    .from("speaker_private")
+    .select("*")
+    .eq("speaker_id", speakerId)
+    .single();
+  return data ? (data as SpeakerPrivate) : null;
+});
+
+export const getSpeakerFiles = cache(async (speakerId: string): Promise<SpeakerFile[]> => {
+  if (isDev()) return [];
+  const supabase = await createClient();
+  const { data } = await (supabase as any)
+    .from("speaker_files")
+    .select("*")
+    .eq("speaker_id", speakerId)
+    .order("sort_order");
+  return (data ?? []) as SpeakerFile[];
+});
+
+export const getSpeakerWithPrivate = cache(async (id: string): Promise<SpeakerWithPrivate | null> => {
+  const [base, priv, files] = await Promise.all([
+    getSpeakerById(id),
+    getSpeakerPrivate(id),
+    getSpeakerFiles(id),
+  ]);
+  if (!base) return null;
+  return { ...base, private: priv, files };
+});
+
+// REQ-2: 강사 코드 생성 유틸
+export function generateSpeakerCode(phone: string, registeredAt?: Date): string {
+  const now = registeredAt ?? new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const last4 = phone.replace(/\D/g, "").slice(-4).padStart(4, "0");
+  return `${yy}${mm}_${last4}`;
+}
+
+// REQ-3: 강사 코드 맵 (speakerId → speaker_code)
+export const getSpeakerCodeMap = cache(async (): Promise<Record<string, string>> => {
+  if (isDev()) return {};
+  const supabase = await createClient();
+  const { data } = await (supabase as any)
+    .from("speaker_private")
+    .select("speaker_id, speaker_code");
+  const rows = (data ?? []) as Array<{ speaker_id: string; speaker_code: string }>;
+  return Object.fromEntries(rows.map((r) => [r.speaker_id, r.speaker_code]));
+});
+
+// ── REQ-5: 어드민 상태별 강사 수 집계 ──
+export const getSpeakerStatusCounts = cache(async (): Promise<Record<SpeakerStatus | "all", number>> => {
+  const all = await getAdminSpeakers();
+  return {
+    all: all.length,
+    노출: all.filter((s) => s.speaker_status === "노출").length,
+    등록요청: all.filter((s) => s.speaker_status === "등록요청").length,
+    미노출: all.filter((s) => s.speaker_status === "미노출").length,
+  };
 });

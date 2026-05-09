@@ -82,7 +82,7 @@ export function InquiryDrawer() {
                 color: "var(--brand-teal-800)",
               }}
             >
-              <strong>{speaker.name}</strong> · {speaker.title} 연사 문의
+              <strong>{speaker.name}</strong> · {speaker.title} 강사 문의
             </div>
           )}
           <InquiryForm speakerId={speaker?.id} onSubmitted={() => setTimeout(closeInquiry, 1600)} />
@@ -196,6 +196,8 @@ function InquiryForm({
         <FormField label="예산 구간" labelStyle={labelStyle}>
           <select value={form.budget} onChange={set("budget")} style={{ ...fieldStyle, appearance: "none" }}>
             <option value="">선택해 주세요</option>
+            <option value="AA">100만원 이하</option>
+            <option value="AB">100–500만원</option>
             <option value="A">500만원 이하</option>
             <option value="B">500–1,000만원</option>
             <option value="C">1,000–2,000만원</option>

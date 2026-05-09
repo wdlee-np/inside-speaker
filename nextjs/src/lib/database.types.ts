@@ -1,6 +1,16 @@
+// REQ-1: "연사" → "강사" 반영 (주석)
+// REQ-2: SpeakerPrivate, SpeakerFile 타입 추가
+// REQ-4: SpeakerVideo에 media_type 추가
+// REQ-5: Speaker에 speaker_status 추가
+// REQ-7: Subcategory에 label_en 추가
+
 export type FeeLevel = "S" | "A" | "B" | "C";
 export type InquiryStatus = "new" | "contacted" | "won" | "lost";
 export type AdminRole = "owner" | "editor";
+// REQ-5
+export type SpeakerStatus = "노출" | "등록요청" | "미노출";
+// REQ-4
+export type MediaType = "video" | "audio" | "youtube";
 
 export interface Category {
   id: string;
@@ -10,10 +20,12 @@ export interface Category {
   sort_order: number;
 }
 
+// REQ-7: label_en 추가
 export interface Subcategory {
   id: string;
   category_id: string;
   label: string;
+  label_en: string | null;
   sort_order: number;
   created_at: string;
 }
@@ -35,6 +47,8 @@ export interface Speaker {
   topics: string[];
   bio: string[];
   recommended_ids: string[];
+  // REQ-5
+  speaker_status: SpeakerStatus;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -45,6 +59,7 @@ export interface SpeakerSubcategory {
   subcategory_id: string;
 }
 
+// REQ-4: media_type 추가
 export interface SpeakerVideo {
   id: string;
   speaker_id: string;
@@ -53,6 +68,7 @@ export interface SpeakerVideo {
   thumb_url: string | null;
   video_url: string;
   sort_order: number;
+  media_type: MediaType;
 }
 
 export interface SpeakerReview {
@@ -70,6 +86,31 @@ export interface SpeakerCareer {
   year: string;
   role: string;
   sort_order: number;
+}
+
+// REQ-2: 어드민 전용 기본 정보
+export interface SpeakerPrivate {
+  speaker_id: string;
+  speaker_code: string | null;
+  phone: string | null;
+  email: string | null;
+  admin_memo: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// REQ-2: 파일 (강의안·증명서)
+export type SpeakerFileType = "lecture_material" | "career_cert" | "edu_cert";
+
+export interface SpeakerFile {
+  id: string;
+  speaker_id: string;
+  file_type: SpeakerFileType;
+  file_url: string;
+  file_name: string | null;
+  file_size: number | null;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Inquiry {
@@ -107,6 +148,12 @@ export interface SpeakerWithRelations extends Speaker {
   careers: SpeakerCareer[];
 }
 
+// REQ-2: 어드민용 확장 타입
+export interface SpeakerWithPrivate extends SpeakerWithRelations {
+  private: SpeakerPrivate | null;
+  files: SpeakerFile[];
+}
+
 export interface CategoryWithSubs extends Category {
   subcategories: Subcategory[];
 }
@@ -128,6 +175,8 @@ export interface Database {
       speaker_videos:        TableDef<SpeakerVideo>;
       speaker_reviews:       TableDef<SpeakerReview>;
       speaker_careers:       TableDef<SpeakerCareer>;
+      speaker_private:       TableDef<SpeakerPrivate>;
+      speaker_files:         TableDef<SpeakerFile>;
       inquiries:             TableDef<Inquiry>;
       admin_users:           TableDef<AdminUser>;
     };

@@ -76,8 +76,8 @@ export function Nav({ categories }: NavProps) {
           <button style={{ padding: 8, color: "var(--ink-soft)" }} aria-label="검색">
             <Icon name="search" />
           </button>
-          <button
-            onClick={() => openInquiry()}
+          <Link
+            href="/register"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -88,6 +88,23 @@ export function Nav({ categories }: NavProps) {
               background: "transparent",
               border: "1px solid var(--line-strong)",
               color: "var(--ink)",
+              textDecoration: "none",
+            }}
+          >
+            강사 등록
+          </Link>
+          <button
+            onClick={() => openInquiry()}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "9px 14px",
+              fontSize: 12,
+              fontWeight: 600,
+              background: "var(--ink)",
+              border: "1px solid var(--ink)",
+              color: "#fff",
             }}
           >
             <Icon name="chat" size={14} /> 섭외 문의
@@ -222,7 +239,27 @@ export function Nav({ categories }: NavProps) {
                 </ul>
               </div>
             ))}
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "14px 22px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: "transparent",
+                  border: "1px solid var(--line-strong)",
+                  color: "var(--ink)",
+                  textDecoration: "none",
+                }}
+              >
+                강사 등록
+              </Link>
               <button
                 onClick={() => { setMobileOpen(false); openInquiry(); }}
                 style={{
@@ -236,6 +273,8 @@ export function Nav({ categories }: NavProps) {
                   fontWeight: 600,
                   background: "var(--accent)",
                   color: "#fff",
+                  border: "none",
+                  cursor: "pointer",
                 }}
               >
                 <Icon name="arrow" size={14} /> 섭외 문의하기

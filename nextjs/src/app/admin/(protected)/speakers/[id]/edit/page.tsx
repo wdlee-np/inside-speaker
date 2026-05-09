@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { getSpeakerById, getCategoriesWithSubs, getSpeakers } from "@/lib/queries";
+import { getSpeakerWithPrivate, getCategoriesWithSubs, getSpeakers } from "@/lib/queries";
 import { SpeakerForm } from "../../_form";
 import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
-import type { SpeakerWithRelations } from "@/lib/database.types";
+import type { SpeakerWithPrivate } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
 
-function toFormValues(s: SpeakerWithRelations): SpeakerFormValues {
+function toFormValues(s: SpeakerWithPrivate): SpeakerFormValues {
   return {
     id: s.id,
     name: s.name,
@@ -31,12 +31,17 @@ function toFormValues(s: SpeakerWithRelations): SpeakerFormValues {
       duration: v.duration ?? "",
       video_url: v.video_url,
       thumb_url: v.thumb_url ?? "",
+      media_type: v.media_type ?? "video",
     })),
     reviews: s.reviews.map((r) => ({
       company: r.company,
       author: r.author ?? "",
       quote: r.quote,
     })),
+    speaker_status: s.speaker_status,
+    phone: s.private?.phone ?? "",
+    email: s.private?.email ?? "",
+    admin_memo: s.private?.admin_memo ?? "",
   };
 }
 
@@ -48,7 +53,7 @@ export default async function EditSpeakerPage({ params }: Props) {
   const { id } = await params;
 
   const [speaker, categoriesWithSubs, allSpeakers] = await Promise.all([
-    getSpeakerById(id),
+    getSpeakerWithPrivate(id),
     getCategoriesWithSubs(),
     getSpeakers(),
   ]);
@@ -61,6 +66,8 @@ export default async function EditSpeakerPage({ params }: Props) {
       defaultValues={toFormValues(speaker)}
       categoriesWithSubs={categoriesWithSubs}
       allSpeakers={allSpeakers}
+      speakerCode={speaker.private?.speaker_code ?? null}
+      existingFiles={speaker.files ?? []}
     />
   );
 }

@@ -4,10 +4,10 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createSpeaker, updateSpeaker } from "@/app/admin/_actions/speakers";
-import { uploadSpeakerImage } from "@/app/admin/_actions/upload";
+import { createSpeaker, updateSpeaker, deleteSpeakerFile } from "@/app/admin/_actions/speakers";
+import { uploadSpeakerImage, uploadSpeakerFile } from "@/app/admin/_actions/upload";
 import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
-import type { CategoryWithSubs, Speaker } from "@/lib/database.types";
+import type { CategoryWithSubs, Speaker, SpeakerFile, SpeakerFileType } from "@/lib/database.types";
 import { Icon } from "@/components/icon";
 
 type ScalarFields = Omit<
@@ -20,9 +20,11 @@ interface Props {
   defaultValues: SpeakerFormValues;
   categoriesWithSubs: CategoryWithSubs[];
   allSpeakers: Speaker[];
+  speakerCode?: string | null;
+  existingFiles?: SpeakerFile[];
 }
 
-export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeakers }: Props) {
+export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeakers, speakerCode, existingFiles = [] }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -47,6 +49,10 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
       stats_talks: defaultValues.stats_talks,
       stats_companies: defaultValues.stats_companies,
       stats_years: defaultValues.stats_years,
+      speaker_status: defaultValues.speaker_status ?? "미노출",
+      phone: defaultValues.phone ?? "",
+      email: defaultValues.email ?? "",
+      admin_memo: defaultValues.admin_memo ?? "",
     },
   });
 
@@ -55,6 +61,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const [videoThumbUploading, setVideoThumbUploading] = useState<Record<number, boolean>>({});
   const [portraitInputMode, setPortraitInputMode] = useState<"upload" | "url">("upload");
   const [thumbInputModes, setThumbInputModes] = useState<Record<number, "upload" | "url">>({});
+  const [files, setFiles] = useState<SpeakerFile[]>(existingFiles);
+  const [fileUploading, setFileUploading] = useState<Partial<Record<SpeakerFileType, boolean>>>({});
 
   const [bio, setBio] = useState<string[]>(
     defaultValues.bio.length ? defaultValues.bio : [""]
@@ -67,7 +75,9 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const [careers, setCareers] = useState(
     defaultValues.careers.length ? defaultValues.careers : [{ year: "", role: "" }]
   );
-  const [videos, setVideos] = useState(defaultValues.videos);
+  const [videos, setVideos] = useState(
+    defaultValues.videos.map((v) => ({ ...v, media_type: v.media_type ?? ("video" as const) }))
+  );
   const [reviews, setReviews] = useState(defaultValues.reviews);
 
   const onSubmit = handleSubmit((scalars) => {
@@ -118,6 +128,44 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
     }
   };
 
+  const handleFileUpload = async (file: File, fileType: SpeakerFileType) => {
+    setFileUploading((prev) => ({ ...prev, [fileType]: true }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadSpeakerFile(defaultValues.id, fileType, fd);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("파일이 업로드되었습니다.");
+        // reload files list — optimistic update with placeholder
+        setFiles((prev) => [
+          ...prev,
+          {
+            id: `temp-${Date.now()}`,
+            speaker_id: defaultValues.id,
+            file_type: fileType,
+            file_url: "",
+            file_name: file.name,
+            file_size: file.size,
+            sort_order: prev.filter((f) => f.file_type === fileType).length,
+          } as SpeakerFile,
+        ]);
+      }
+    } finally {
+      setFileUploading((prev) => ({ ...prev, [fileType]: false }));
+    }
+  };
+
+  const handleFileDelete = async (fileId: string) => {
+    const result = await deleteSpeakerFile(fileId);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      setFiles((prev) => prev.filter((f) => f.id !== fileId));
+    }
+  };
+
   const handleThumbUpload = async (file: File, videoIndex: number) => {
     setVideoThumbUploading((prev) => ({ ...prev, [videoIndex]: true }));
     try {
@@ -140,7 +188,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
       <div style={{ padding: "32px 48px", maxWidth: 900 }}>
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--color-ink)", margin: 0 }}>
-            {mode === "create" ? "새 연사 추가" : "연사 수정"}
+            {mode === "create" ? "새 강사 추가" : "강사 수정"}
           </h1>
           {mode === "edit" && (
             <p style={{ marginTop: 4, fontSize: 13, color: "var(--color-ink-muted)" }}>
@@ -190,6 +238,19 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 placeholder='"일하는 방식을 설계하면, 성과는 따라온다."'
                 style={inp()}
               />
+            </Field>
+          </FieldGrid>
+        </Section>
+
+        {/* 노출 상태 (REQ-5) */}
+        <Section title="노출 상태">
+          <FieldGrid cols={2}>
+            <Field label="강사 상태" required>
+              <select {...register("speaker_status")} style={inp()}>
+                <option value="노출">노출</option>
+                <option value="등록요청">등록요청</option>
+                <option value="미노출">미노출</option>
+              </select>
             </Field>
           </FieldGrid>
         </Section>
@@ -457,8 +518,8 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           ))}
         </Section>
 
-        {/* 추천 연사 */}
-        <Section title="추천 연사">
+        {/* 추천 강사 */}
+        <Section title="추천 강사">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {allSpeakers
               .filter((s) => s.id !== defaultValues.id)
@@ -572,6 +633,32 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                   <Icon name="close" size={14} />
                 </button>
               </div>
+              {/* 미디어 타입 선택 (REQ-4) */}
+              <div style={{ marginBottom: 14, display: "flex", gap: 6 }}>
+                {([
+                  { value: "youtube", label: "유튜브" },
+                  { value: "video", label: "영상" },
+                  { value: "audio", label: "오디오" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      const next = [...videos];
+                      next[i] = { ...next[i], media_type: opt.value };
+                      setVideos(next);
+                    }}
+                    style={{
+                      fontSize: 11, padding: "4px 12px", borderRadius: 4, cursor: "pointer",
+                      background: v.media_type === opt.value ? "var(--color-accent)" : "transparent",
+                      color: v.media_type === opt.value ? "#fff" : "var(--color-ink-muted)",
+                      border: `1px solid ${v.media_type === opt.value ? "var(--color-accent)" : "var(--color-line)"}`,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
               <FieldGrid cols={2}>
                 <Field label="제목">
                   <input
@@ -597,7 +684,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                     style={inp()}
                   />
                 </Field>
-                <Field label="영상 URL" span={2}>
+                <Field label={v.media_type === "audio" ? "오디오 URL" : v.media_type === "youtube" ? "유튜브 URL" : "영상 URL"} span={2}>
                   <input
                     value={v.video_url}
                     onChange={(e) => {
@@ -609,7 +696,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                     style={inp()}
                   />
                 </Field>
-                <Field label="썸네일 이미지" span={2}>
+                <Field label={v.media_type === "audio" ? "커버 이미지 (선택)" : "썸네일 이미지"} span={2}>
                   <div style={{ marginBottom: 8, display: "flex", gap: 6 }}>
                     {(["upload", "url"] as const).map((m) => (
                       <button
@@ -694,7 +781,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           <button
             type="button"
             onClick={() =>
-              setVideos([...videos, { title: "", duration: "", video_url: "", thumb_url: "" }])
+              setVideos([...videos, { title: "", duration: "", video_url: "", thumb_url: "", media_type: "video" as const }])
             }
             style={addBtn}
           >
@@ -784,6 +871,74 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           >
             + 후기 추가
           </button>
+        </Section>
+
+        {/* 어드민 전용 정보 (REQ-2) */}
+        <Section title="어드민 전용 정보">
+          <FieldGrid cols={2}>
+            {speakerCode && (
+              <Field label="강사 코드">
+                <div style={{ ...inp(), color: "var(--color-ink-muted)", background: "var(--color-bg)", fontFamily: "var(--font-en)" }}>
+                  {speakerCode}
+                </div>
+              </Field>
+            )}
+            <Field label="연락처 (전화)">
+              <input {...register("phone")} placeholder="010-0000-0000" style={inp()} />
+            </Field>
+            <Field label="이메일">
+              <input {...register("email")} type="email" placeholder="speaker@example.com" style={inp()} />
+            </Field>
+            <Field label="어드민 메모" span={2}>
+              <textarea
+                {...register("admin_memo")}
+                rows={3}
+                placeholder="내부 참고 사항 (공개 안 됨)"
+                style={{ ...inp(), resize: "vertical" }}
+              />
+            </Field>
+          </FieldGrid>
+
+          {/* 파일 첨부 (수정 모드에서만) */}
+          {mode === "edit" && (
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--color-line)" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-ink-muted)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                첨부 파일
+              </div>
+              <FileSection
+                label="강의 자료 (최대 5개)"
+                fileType="lecture_material"
+                maxCount={5}
+                files={files.filter((f) => f.file_type === "lecture_material")}
+                uploading={!!fileUploading.lecture_material}
+                onUpload={(file) => handleFileUpload(file, "lecture_material")}
+                onDelete={handleFileDelete}
+              />
+              <FileSection
+                label="경력 증명서 (선택)"
+                fileType="career_cert"
+                maxCount={1}
+                files={files.filter((f) => f.file_type === "career_cert")}
+                uploading={!!fileUploading.career_cert}
+                onUpload={(file) => handleFileUpload(file, "career_cert")}
+                onDelete={handleFileDelete}
+              />
+              <FileSection
+                label="학력 증명서 (선택)"
+                fileType="edu_cert"
+                maxCount={1}
+                files={files.filter((f) => f.file_type === "edu_cert")}
+                uploading={!!fileUploading.edu_cert}
+                onUpload={(file) => handleFileUpload(file, "edu_cert")}
+                onDelete={handleFileDelete}
+              />
+            </div>
+          )}
+          {mode === "create" && (
+            <p style={{ marginTop: 16, fontSize: 12, color: "var(--color-ink-muted)" }}>
+              파일 첨부는 강사를 먼저 저장한 후 수정 화면에서 할 수 있습니다.
+            </p>
+          )}
         </Section>
 
         {/* 하단 버튼 */}
@@ -949,3 +1104,82 @@ const addBtn: React.CSSProperties = {
   cursor: "pointer",
   marginTop: 4,
 };
+
+// ── FileSection ─────────────────────────────────────────────────────────────
+
+function FileSection({
+  label,
+  fileType,
+  maxCount,
+  files,
+  uploading,
+  onUpload,
+  onDelete,
+}: {
+  label: string;
+  fileType: SpeakerFileType;
+  maxCount: number;
+  files: SpeakerFile[];
+  uploading: boolean;
+  onUpload: (file: File) => void;
+  onDelete: (id: string) => void;
+}) {
+  const canUpload = files.length < maxCount;
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--color-ink-soft)", marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {files.map((f) => (
+          <div
+            key={f.id}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 12px", background: "var(--color-bg)",
+              border: "1px solid var(--color-line)", borderRadius: 4,
+            }}
+          >
+            <span style={{ fontSize: 12, color: "var(--color-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>
+              {f.file_name}
+              {(f.file_size ?? 0) > 0 && (
+                <span style={{ marginLeft: 8, fontSize: 11, color: "var(--color-ink-muted)" }}>
+                  ({((f.file_size ?? 0) / 1024 / 1024).toFixed(1)} MB)
+                </span>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => onDelete(f.id)}
+              style={{ ...removeBtn, width: "auto", height: "auto", padding: "4px 8px", fontSize: 11 }}
+            >
+              삭제
+            </button>
+          </div>
+        ))}
+        {canUpload && (
+          <label
+            style={{
+              ...addBtn,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              cursor: uploading ? "not-allowed" : "pointer",
+              opacity: uploading ? 0.6 : 1,
+            }}
+          >
+            {uploading ? "업로드 중…" : `+ ${label.split(" ")[0]} 업로드`}
+            <input
+              type="file"
+              style={{ display: "none" }}
+              disabled={uploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUpload(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+}

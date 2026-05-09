@@ -2,7 +2,7 @@ import { getCategoriesWithSubs, getSpeakers } from "@/lib/queries";
 import { SpeakerForm } from "../_form";
 import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
 
-export const metadata = { title: "새 연사 추가 | Admin" };
+export const metadata = { title: "새 강사 추가 | Admin" };
 
 const EMPTY: SpeakerFormValues = {
   id: "",
@@ -25,6 +25,10 @@ const EMPTY: SpeakerFormValues = {
   careers: [],
   videos: [],
   reviews: [],
+  speaker_status: "미노출",
+  phone: "",
+  email: "",
+  admin_memo: "",
 };
 
 export default async function NewSpeakerPage() {

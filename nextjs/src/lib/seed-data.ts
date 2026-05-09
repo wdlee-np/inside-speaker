@@ -1,4 +1,4 @@
-import type { FeeLevel, Category, Subcategory } from "@/lib/database.types";
+import type { FeeLevel, Category, Subcategory, SpeakerStatus, MediaType } from "@/lib/database.types";
 
 export const SEED_CATEGORIES: Category[] = [
   { id: "competency", label: "직무 역량", label_en: "Core Competency", description: "조직의 성과와 직결되는 실전 역량", sort_order: 1 },
@@ -8,19 +8,19 @@ export const SEED_CATEGORIES: Category[] = [
 ];
 
 export const SEED_SUBCATEGORIES: Subcategory[] = [
-  { id: "leadership",       category_id: "competency",    label: "리더십",                sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
-  { id: "hr-org",           category_id: "competency",    label: "인사/조직관리",          sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
-  { id: "sales-marketing",  category_id: "competency",    label: "영업/마케팅",            sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
-  { id: "strategy",         category_id: "competency",    label: "전략/기획",              sort_order: 4, created_at: "2025-01-01T00:00:00Z" },
-  { id: "gen-ai",           category_id: "future-tech",   label: "생성형 AI 활용",         sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
-  { id: "dx",               category_id: "future-tech",   label: "디지털 트랜스포메이션",  sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
-  { id: "new-industry",     category_id: "future-tech",   label: "신산업 트렌드",          sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
-  { id: "communication",    category_id: "humanities",    label: "비즈니스 커뮤니케이션",  sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
-  { id: "mindfulness",      category_id: "humanities",    label: "심리/마인드풀니스",      sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
-  { id: "esg",              category_id: "humanities",    label: "ESG/윤리경영",           sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
-  { id: "macro-finance",    category_id: "economy-life",  label: "거시경제/재테크",        sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
-  { id: "self-dev",         category_id: "economy-life",  label: "자기계발",               sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
-  { id: "health-wellbeing", category_id: "economy-life",  label: "건강/웰빙",              sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
+  { id: "leadership",       category_id: "competency",    label: "리더십",                label_en: null, sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
+  { id: "hr-org",           category_id: "competency",    label: "인사/조직관리",          label_en: null, sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
+  { id: "sales-marketing",  category_id: "competency",    label: "영업/마케팅",            label_en: null, sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
+  { id: "strategy",         category_id: "competency",    label: "전략/기획",              label_en: null, sort_order: 4, created_at: "2025-01-01T00:00:00Z" },
+  { id: "gen-ai",           category_id: "future-tech",   label: "생성형 AI 활용",         label_en: null, sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
+  { id: "dx",               category_id: "future-tech",   label: "디지털 트랜스포메이션",  label_en: null, sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
+  { id: "new-industry",     category_id: "future-tech",   label: "신산업 트렌드",          label_en: null, sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
+  { id: "communication",    category_id: "humanities",    label: "비즈니스 커뮤니케이션",  label_en: null, sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
+  { id: "mindfulness",      category_id: "humanities",    label: "심리/마인드풀니스",      label_en: null, sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
+  { id: "esg",              category_id: "humanities",    label: "ESG/윤리경영",           label_en: null, sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
+  { id: "macro-finance",    category_id: "economy-life",  label: "거시경제/재테크",        label_en: null, sort_order: 1, created_at: "2025-01-01T00:00:00Z" },
+  { id: "self-dev",         category_id: "economy-life",  label: "자기계발",               label_en: null, sort_order: 2, created_at: "2025-01-01T00:00:00Z" },
+  { id: "health-wellbeing", category_id: "economy-life",  label: "건강/웰빙",              label_en: null, sort_order: 3, created_at: "2025-01-01T00:00:00Z" },
 ];
 
 export interface SeedSpeaker {
@@ -40,7 +40,8 @@ export interface SeedSpeaker {
   topics: string[];
   bio: string[];
   display_order: number;
-  videos: { title: string; duration: string; thumb_url: null; video_url: string }[];
+  speaker_status: SpeakerStatus;
+  videos: { title: string; duration: string; thumb_url: null; video_url: string; media_type?: MediaType }[];
   reviews: { company: string; author: string; quote: string }[];
   careers: { year: string; role: string }[];
 }
@@ -65,6 +66,7 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 380,
     stats_years: 18,
     display_order: 1,
+    speaker_status: "노출",
     topics: ["성과를 만드는 리더십 루틴", "성숙한 조직을 만드는 1:1 대화법", "고성장 조직의 인재 밀도 관리"],
     bio: [
       "글로벌 테크 기업의 조직문화 총괄로 8년간 근무하며, 3천 명 규모 조직의 일하는 방식을 재설계했다.",
@@ -72,8 +74,8 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
       "저서 『성과를 만드는 루틴』 외 3권.",
     ],
     videos: [
-      { title: "성과를 만드는 리더십 루틴 (삼성전자 사내 강연)", duration: "14:32", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" },
-      { title: "1:1 미팅, 왜 실패하는가", duration: "09:18", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" },
+      { title: "성과를 만드는 리더십 루틴 (삼성전자 사내 강연)", duration: "14:32", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" },
+      { title: "1:1 미팅, 왜 실패하는가", duration: "09:18", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" },
     ],
     reviews: [
       { company: "LG전자 HR", author: "인재개발팀 이**", quote: "추상적인 리더십 이론이 아니라, 당장 월요일에 적용할 수 있는 프레임워크를 주셨습니다." },
@@ -100,11 +102,12 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 210,
     stats_years: 12,
     display_order: 2,
+    speaker_status: "노출",
     topics: ["실무자를 위한 생성형 AI 활용 워크샵", "DX, 어디서부터 시작할 것인가", "AI 시대, 조직의 일하는 방식"],
     bio: ["AI 스타트업 공동창업자로 엑싯 후, 현재는 대기업의 AI 전환 자문을 맡고 있다.", "기업 내재화 프로그램을 70여 개 수행했다."],
     videos: [
-      { title: "실무자를 위한 Prompt Engineering 입문", duration: "22:10", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" },
-      { title: "DX, 왜 대부분 실패하는가", duration: "17:45", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" },
+      { title: "실무자를 위한 Prompt Engineering 입문", duration: "22:10", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" },
+      { title: "DX, 왜 대부분 실패하는가", duration: "17:45", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" },
     ],
     reviews: [{ company: "현대자동차", author: "미래기술전략팀 김**", quote: "기술 유행어가 아닌, 우리 조직이 당장 실행할 수 있는 단계를 짚어주셨습니다." }],
     careers: [
@@ -127,9 +130,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 450,
     stats_years: 15,
     display_order: 3,
+    speaker_status: "노출",
     topics: ["임원을 위한 프레젠테이션 구조학", "내부 커뮤니케이션, 무엇이 조직을 흐트러뜨리는가", "어려운 메시지 전달의 기술"],
     bio: ["10년간 지상파 메인 뉴스 앵커로 활동하며 공적 언어의 감각을 쌓았다.", "현재는 대기업 임원 커뮤니케이션 코칭을 주로 담당한다."],
-    videos: [{ title: "임원 프레젠테이션, 구조가 전부다", duration: "19:22", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "임원 프레젠테이션, 구조가 전부다", duration: "19:22", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "SK하이닉스", author: "기업문화실", quote: "임원진 전원이 메시지 구조 하나로 프레젠테이션이 달라졌습니다." }],
     careers: [
       { year: "2021–현재", role: "Inside Co. Sr. Facilitator" },
@@ -151,9 +155,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 260,
     stats_years: 20,
     display_order: 4,
+    speaker_status: "노출",
     topics: ["조직의 의사결정 시스템", "신사업 진출의 5가지 원칙", "PMI 실전 전략"],
     bio: ["Top-tier 전략 컨설팅 파트너 출신. 국내 최대 MBA에서 전략 과목을 가르친다."],
-    videos: [{ title: "신사업, 무엇을 버릴 것인가", duration: "16:04", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "신사업, 무엇을 버릴 것인가", duration: "16:04", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "CJ 그룹", author: "전략기획실", quote: "이론이 아니라 실제 의사결정의 틀을 바꿔주셨습니다." }],
     careers: [
       { year: "2017–현재", role: "K-MBA Professor of Strategy" },
@@ -175,9 +180,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 510,
     stats_years: 14,
     display_order: 5,
+    speaker_status: "노출",
     topics: ["번아웃 없이 성과내는 팀", "임원의 감정 체력", "마인드풀 리더십"],
     bio: ["조직심리학 박사. 『지치지 않는 팀』 저자."],
-    videos: [{ title: "번아웃 없는 팀의 7가지 습관", duration: "21:40", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "번아웃 없는 팀의 7가지 습관", duration: "21:40", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "네이버", author: "People Experience", quote: "임원진 스스로의 상태를 돌아보게 만드는 시간이었습니다." }],
     careers: [{ year: "2018–현재", role: "Inside Co. Sr. Psychologist" }],
   },
@@ -196,9 +202,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 140,
     stats_years: 11,
     display_order: 6,
+    speaker_status: "노출",
     topics: ["실행 가능한 ESG", "윤리경영과 조직 신뢰", "공시 시대의 전략"],
     bio: ["국제기구 지속가능경영 자문 출신. 국내 주요 대기업 ESG 자문 다수."],
-    videos: [{ title: "실행 가능한 ESG, 무엇부터 할 것인가", duration: "18:55", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "실행 가능한 ESG, 무엇부터 할 것인가", duration: "18:55", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "포스코", author: "지속가능경영실", quote: "당위가 아닌 실행 관점의 설명이 인상적이었습니다." }],
     careers: [{ year: "2020–현재", role: "Inside Co. ESG Advisor" }],
   },
@@ -217,9 +224,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 340,
     stats_years: 16,
     display_order: 7,
+    speaker_status: "노출",
     topics: ["B2B 세일즈의 구조화", "영업 리더를 위한 코칭", "성과 루틴 설계"],
     bio: ["B2B SaaS 세일즈 VP 출신. 10년간 영업 조직 퍼포먼스를 설계해왔다."],
-    videos: [{ title: "B2B 영업의 5단계 구조", duration: "15:22", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "B2B 영업의 5단계 구조", duration: "15:22", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "KT", author: "B2B 본부", quote: "막연했던 영업 활동이 체계가 되었습니다." }],
     careers: [{ year: "2019–현재", role: "Inside Co. Sales Coach" }],
   },
@@ -238,9 +246,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 180,
     stats_years: 13,
     display_order: 8,
+    speaker_status: "노출",
     topics: ["2026년 거시경제 전망", "자산 배분의 원칙", "금리의 시대 읽기"],
     bio: ["증권사 수석 애널리스트 출신. 기업 대상 경제 전망 강연 다수."],
-    videos: [{ title: "2026 거시경제 전망", duration: "28:10", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "2026 거시경제 전망", duration: "28:10", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "하나금융", author: "리서치센터", quote: "논리와 데이터의 균형이 뛰어납니다." }],
     careers: [{ year: "2022–현재", role: "Inside Co. Chief Economist" }],
   },
@@ -259,9 +268,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 620,
     stats_years: 17,
     display_order: 9,
+    speaker_status: "노출",
     topics: ["1%의 습관", "몰입의 과학", "개인의 루틴, 조직의 성과"],
-    bio: ["『작은 습관』 저자. 자기계발 분야 대표 연사."],
-    videos: [{ title: "1%의 습관, 100배의 결과", duration: "24:00", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    bio: ["『작은 습관』 저자. 자기계발 분야 대표 강사."],
+    videos: [{ title: "1%의 습관, 100배의 결과", duration: "24:00", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "삼성SDS", author: "인재개발팀", quote: "직원들의 몰입도가 가장 높았던 강연 중 하나였습니다." }],
     careers: [{ year: "2015–현재", role: "Author & Keynote Speaker" }],
   },
@@ -280,9 +290,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 200,
     stats_years: 10,
     display_order: 10,
+    speaker_status: "노출",
     topics: ["임원의 건강 관리", "수면과 인지 성과", "조직의 웰빙 시스템"],
     bio: ["대학병원 예방의학 박사. 기업 임원 건강 프로그램 자문."],
-    videos: [{ title: "임원의 수면, 성과의 숨은 레버리지", duration: "20:15", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "임원의 수면, 성과의 숨은 레버리지", duration: "20:15", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "KB국민은행", author: "복리후생팀", quote: "임원 대상 가장 반응이 좋았던 강연입니다." }],
     careers: [{ year: "2021–현재", role: "Inside Co. Wellness Advisor" }],
   },
@@ -301,9 +312,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 170,
     stats_years: 9,
     display_order: 11,
+    speaker_status: "노출",
     topics: ["2026 산업 지도", "스페이스테크와 모빌리티", "플랫폼 이후의 비즈니스"],
     bio: ["Tech 전문 미디어 편집장 출신. 신산업 리포트 발간."],
-    videos: [{ title: "플랫폼 이후의 게임", duration: "19:08", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "플랫폼 이후의 게임", duration: "19:08", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "현대모비스", author: "미래전략팀", quote: "추상적 트렌드가 아닌 산업 구조로 설명해 주셨습니다." }],
     careers: [{ year: "2023–현재", role: "Inside Co. Industry Analyst" }],
   },
@@ -322,9 +334,10 @@ export const SEED_SPEAKERS: SeedSpeaker[] = [
     stats_companies: 230,
     stats_years: 12,
     display_order: 12,
+    speaker_status: "노출",
     topics: ["B2B 브랜드 포지셔닝", "콘텐츠 마케팅 전략", "브랜드와 조직문화의 연결"],
     bio: ["글로벌 FMCG 브랜드 매니저 출신. 현재 B2B 브랜드 자문."],
-    videos: [{ title: "B2B 브랜드, 어디서부터 시작하는가", duration: "17:35", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder" }],
+    videos: [{ title: "B2B 브랜드, 어디서부터 시작하는가", duration: "17:35", thumb_url: null, video_url: "https://www.youtube.com/watch?v=placeholder", media_type: "youtube" }],
     reviews: [{ company: "한화시스템", author: "브랜드실", quote: "B2B 브랜딩을 구조적으로 정리할 수 있었습니다." }],
     careers: [{ year: "2020–현재", role: "Inside Co. Brand Advisor" }],
   },
@@ -362,7 +375,7 @@ export const SEED_INQUIRIES: Inquiry[] = [
     desired_speaker: null,
     desired_date: null,
     budget_range: "B",
-    message: "희망 주제: 생성형 AI 조직 도입\n예상 인원: 50명\n상반기 중 진행 희망, 연사 추천 부탁드립니다.",
+    message: "희망 주제: 생성형 AI 조직 도입\n예상 인원: 50명\n상반기 중 진행 희망, 강사 추천 부탁드립니다.",
     status: "new",
     internal_memo: null,
     source_url: "/",

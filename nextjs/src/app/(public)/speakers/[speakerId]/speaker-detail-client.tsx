@@ -231,11 +231,15 @@ export function SpeakerDetailClient({
         <DetailSection id="videos" index="02" title="강연 영상" eyebrow="Videos" muted>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 32 }} className="videos-grid">
             {speaker.videos.map((v) => {
-              const youtubeId = getYoutubeId(v.video_url ?? "");
+              const mediaType = v.media_type ?? (getYoutubeId(v.video_url ?? "") ? "youtube" : "video");
+              const youtubeId = mediaType === "youtube" ? getYoutubeId(v.video_url ?? "") : null;
               const isPlaying = playingVideoId === v.id;
+              const isAudio = mediaType === "audio";
 
               const handlePlay = () => {
-                if (youtubeId) {
+                if (isAudio) {
+                  setPlayingVideoId(isPlaying ? null : v.id);
+                } else if (youtubeId) {
                   setPlayingVideoId(v.id);
                 } else if (v.video_url) {
                   window.open(v.video_url, "_blank", "noopener,noreferrer");
@@ -244,76 +248,99 @@ export function SpeakerDetailClient({
 
               return (
                 <div key={v.id}>
-                  <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
-                    {isPlaying && youtubeId ? (
-                      <iframe
-                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
-                        allow="autoplay; encrypted-media; fullscreen"
-                        allowFullScreen
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
-                      />
-                    ) : (
-                      <>
+                  {isAudio ? (
+                    /* 오디오 카드 */
+                    <div
+                      style={{
+                        background: "#1a1916", borderRadius: 4, overflow: "hidden",
+                        padding: "28px 24px", display: "flex", flexDirection: "column", gap: 16,
+                        minHeight: 140,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                         {v.thumb_url ? (
-                          <img
-                            src={v.thumb_url}
-                            alt={v.title}
-                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        ) : youtubeId ? (
-                          <img
-                            src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`}
-                            alt={v.title}
-                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                          />
+                          <img src={v.thumb_url} alt={v.title} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
                         ) : (
-                          <div
-                            className="portrait-ph"
-                            style={{
-                              position: "absolute", inset: 0, aspectRatio: "auto",
-                              "--_ph-a": "#3a3834", "--_ph-b": "#141311",
-                            } as React.CSSProperties}
-                          >
-                            <span className="ph-label">Video · Placeholder</span>
+                          <div style={{ width: 56, height: 56, background: "rgba(255,255,255,.08)", borderRadius: 4, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                            <Icon name="audio" size={24} stroke={1.5} />
                           </div>
                         )}
-                        <div
-                          style={{
-                            position: "absolute", inset: 0, display: "grid", placeItems: "center",
-                            background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
-                            cursor: v.video_url ? "pointer" : "default",
-                          }}
-                          onClick={handlePlay}
-                        >
-                          {v.video_url && (
-                            <button
-                              style={{
-                                width: 64, height: 64, borderRadius: 999,
-                                background: "rgba(255,255,255,.92)", color: "var(--ink)",
-                                display: "grid", placeItems: "center", border: "none", cursor: "pointer",
-                              }}
-                            >
-                              <Icon name="play" size={22} />
-                            </button>
-                          )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Audio</div>
+                          <h4 className="serif" style={{ fontSize: 18, fontWeight: 400, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.3 }}>{v.title}</h4>
+                          {v.duration && <div className="en" style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,.4)" }}>{v.duration}</div>}
                         </div>
-                        {v.duration && (
-                          <span
-                            className="en"
+                      </div>
+                      {isPlaying && v.video_url ? (
+                        <audio controls autoPlay src={v.video_url} style={{ width: "100%", height: 36, accentColor: "var(--accent)" }} />
+                      ) : (
+                        v.video_url && (
+                          <button
+                            onClick={handlePlay}
                             style={{
-                              position: "absolute", bottom: 12, right: 12,
-                              fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px",
+                              display: "inline-flex", alignItems: "center", gap: 8,
+                              padding: "8px 16px", fontSize: 12, fontWeight: 600,
+                              background: "var(--accent)", color: "#fff",
+                              border: "none", cursor: "pointer", borderRadius: 2, alignSelf: "flex-start",
                             }}
                           >
-                            {v.duration}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
-                    {v.title}
-                  </h4>
+                            <Icon name="play" size={14} /> 재생
+                          </button>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    /* 영상/유튜브 카드 */
+                    <div style={{ position: "relative", aspectRatio: "16/9", background: "#141311", overflow: "hidden" }}>
+                      {isPlaying && youtubeId ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+                          allow="autoplay; encrypted-media; fullscreen"
+                          allowFullScreen
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                        />
+                      ) : (
+                        <>
+                          {v.thumb_url ? (
+                            <img src={v.thumb_url} alt={v.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : youtubeId ? (
+                            <img src={`https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`} alt={v.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <div
+                              className="portrait-ph"
+                              style={{ position: "absolute", inset: 0, aspectRatio: "auto", "--_ph-a": "#3a3834", "--_ph-b": "#141311" } as React.CSSProperties}
+                            >
+                              <span className="ph-label">Video · Placeholder</span>
+                            </div>
+                          )}
+                          <div
+                            style={{
+                              position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                              background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,.4) 100%)",
+                              cursor: v.video_url ? "pointer" : "default",
+                            }}
+                            onClick={handlePlay}
+                          >
+                            {v.video_url && (
+                              <button style={{ width: 64, height: 64, borderRadius: 999, background: "rgba(255,255,255,.92)", color: "var(--ink)", display: "grid", placeItems: "center", border: "none", cursor: "pointer" }}>
+                                <Icon name="play" size={22} />
+                              </button>
+                            )}
+                          </div>
+                          {v.duration && (
+                            <span className="en" style={{ position: "absolute", bottom: 12, right: 12, fontSize: 11, color: "#fff", background: "rgba(0,0,0,.6)", padding: "3px 8px" }}>
+                              {v.duration}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {!isAudio && (
+                    <h4 className="serif" style={{ marginTop: 16, fontSize: 20, fontWeight: 400, letterSpacing: "-0.015em" }}>
+                      {v.title}
+                    </h4>
+                  )}
                 </div>
               );
             })}
