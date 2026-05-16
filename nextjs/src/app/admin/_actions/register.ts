@@ -65,6 +65,10 @@ export async function publicRegisterSpeaker(
     stats_years: values.stats_years || 0,
     bio: values.bio.filter(Boolean),
     topics: flatTopics,
+    topic_groups: values.topicGroups.map((g) => ({
+      subcategoryId: g.subcategoryId,
+      topics: g.topics.filter(Boolean),
+    })),
     recommended_ids: [],
     speaker_status: "등록요청",
   });

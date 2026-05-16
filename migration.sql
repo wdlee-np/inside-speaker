@@ -59,6 +59,33 @@ WHERE s.deleted_at IS NULL
   AND array_length(s.topics, 1) > 0
   AND NOT EXISTS (SELECT 1 FROM speaker_topics st WHERE st.speaker_id = s.id);
 
+-- 5. speakers 테이블에 topic_groups JSONB 컬럼 추가 (전문분야-주제 매핑 직접 저장)
+ALTER TABLE speakers
+  ADD COLUMN IF NOT EXISTS topic_groups jsonb DEFAULT NULL;
+
+-- 기존 speaker_topics 데이터가 있는 강사는 topic_groups로 마이그레이션
+UPDATE speakers s
+SET topic_groups = (
+  SELECT jsonb_agg(
+    jsonb_build_object(
+      'subcategoryId', grp.subcategory_id,
+      'topics', grp.topic_list
+    )
+    ORDER BY grp.min_sort
+  )
+  FROM (
+    SELECT
+      st.subcategory_id,
+      jsonb_agg(st.topic_text ORDER BY st.sort_order) AS topic_list,
+      MIN(st.sort_order) AS min_sort
+    FROM speaker_topics st
+    WHERE st.speaker_id = s.id
+    GROUP BY st.subcategory_id
+  ) grp
+)
+WHERE s.deleted_at IS NULL
+  AND EXISTS (SELECT 1 FROM speaker_topics st WHERE st.speaker_id = s.id);
+
 -- ============================================================
 -- 완료 확인 쿼리
 -- ============================================================

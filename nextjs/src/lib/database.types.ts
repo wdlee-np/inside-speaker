@@ -47,6 +47,7 @@ export interface Speaker {
   topics: string[];
   bio: string[];
   recommended_ids: string[];
+  topic_groups: { subcategoryId: string | null; topics: string[] }[] | null;
   // REQ-5
   speaker_status: SpeakerStatus;
   created_at: string;

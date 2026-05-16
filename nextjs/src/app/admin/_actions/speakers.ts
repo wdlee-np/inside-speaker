@@ -205,6 +205,10 @@ export async function createSpeaker(values: SpeakerFormValues): Promise<{ error?
     stats_years: values.stats_years,
     bio: values.bio.filter(Boolean),
     topics: flatTopics,
+    topic_groups: values.topicGroups.map((g) => ({
+      subcategoryId: g.subcategoryId,
+      topics: g.topics.filter(Boolean),
+    })),
     recommended_ids: values.recommended_ids,
     speaker_status: values.speaker_status || "미노출",
   });
@@ -252,6 +256,10 @@ export async function updateSpeaker(
       stats_years: values.stats_years,
       bio: values.bio.filter(Boolean),
       topics: flatTopics,
+      topic_groups: values.topicGroups.map((g) => ({
+        subcategoryId: g.subcategoryId,
+        topics: g.topics.filter(Boolean),
+      })),
       recommended_ids: values.recommended_ids,
       speaker_status: values.speaker_status,
       updated_at: new Date().toISOString(),

@@ -7,10 +7,16 @@ import type { SpeakerWithPrivate, SpeakerTopic } from "@/lib/database.types";
 export const dynamic = "force-dynamic";
 
 function buildTopicGroups(
+  storedGroups: { subcategoryId: string | null; topics: string[] }[] | null | undefined,
   topicRows: SpeakerTopic[],
   subcategoryIds: string[],
   flatTopics: string[]
 ): TopicGroup[] {
+  // 1순위: speakers.topic_groups 컬럼 (가장 정확한 소스)
+  if (storedGroups && storedGroups.length > 0) {
+    return storedGroups.map((g) => ({ subcategoryId: g.subcategoryId, topics: g.topics }));
+  }
+  // 2순위: speaker_topics 테이블 행
   if (topicRows.length > 0) {
     const map = new Map<string, TopicGroup>();
     for (const row of topicRows) {
@@ -22,7 +28,7 @@ function buildTopicGroups(
     }
     return [...map.values()];
   }
-  // 기존 데이터 폴백: subcategoryIds를 빈 그룹으로, topics를 기타 그룹으로
+  // 3순위 폴백: 기존 flat topics (subcategory 매핑 불가)
   const result: TopicGroup[] = subcategoryIds.map((subId) => ({
     subcategoryId: subId,
     topics: [],
@@ -49,7 +55,7 @@ function toFormValues(s: SpeakerWithPrivate, topicRows: SpeakerTopic[]): Speaker
     stats_companies: s.stats_companies,
     stats_years: s.stats_years,
     bio: s.bio,
-    topicGroups: buildTopicGroups(topicRows, s.subcategory_ids, s.topics),
+    topicGroups: buildTopicGroups(s.topic_groups, topicRows, s.subcategory_ids, s.topics),
     recommended_ids: s.recommended_ids,
     careers: s.careers.map((c) => ({ year: c.year, role: c.role })),
     videos: s.videos.map((v) => ({

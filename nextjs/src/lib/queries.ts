@@ -49,6 +49,7 @@ function seedToSpeaker(s: SeedSpeaker): Speaker {
     topics: s.topics,
     bio: s.bio,
     recommended_ids: [],
+    topic_groups: null,
     speaker_status: s.speaker_status,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
