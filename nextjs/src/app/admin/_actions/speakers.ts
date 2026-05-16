@@ -95,16 +95,8 @@ async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFor
       }))
   );
   if (topicRows.length > 0) {
-    // speaker_topics는 에러를 직접 확인 (테이블 미생성 감지)
-    const { error: topicErr } = await q.from("speaker_topics").insert(topicRows);
-    if (topicErr) {
-      const msg = (topicErr as { message: string; code?: string }).message ?? "";
-      const code = (topicErr as { code?: string }).code ?? "";
-      if (code === "42P01" || msg.includes("does not exist")) {
-        return "speaker_topics 테이블이 없습니다. Supabase SQL Editor에서 migration.sql 4번 항목을 실행해 주세요.";
-      }
-      return `주제 저장 오류: ${msg}`;
-    }
+    // speaker_topics는 topic_groups 보조 저장소 — RLS/권한 오류는 무시 (topic_groups가 primary)
+    await q.from("speaker_topics").insert(topicRows);
   }
 
   const videoRows = values.videos
