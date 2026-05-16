@@ -110,7 +110,15 @@ export async function publicRegisterSpeaker(
       }))
   );
   if (topicRows.length > 0) {
-    await q.from("speaker_topics").insert(topicRows);
+    const { error: topicErr } = await q.from("speaker_topics").insert(topicRows);
+    if (topicErr) {
+      const msg = (topicErr as { message: string; code?: string }).message ?? "";
+      const code = (topicErr as { code?: string }).code ?? "";
+      if (code === "42P01" || msg.includes("does not exist")) {
+        return { error: "speaker_topics 테이블이 없습니다. Supabase SQL Editor에서 migration.sql 4번 항목을 실행해 주세요." };
+      }
+      return { error: `주제 저장 오류: ${msg}` };
+    }
   }
 
   const careerRows = values.careers

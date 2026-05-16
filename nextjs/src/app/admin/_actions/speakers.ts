@@ -56,12 +56,13 @@ function deriveFromTopicGroups(topicGroups: TopicGroup[]) {
   return { flatTopics, subcategoryIds };
 }
 
-async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFormValues) {
+async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFormValues): Promise<string | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const q = sb as any;
 
   const { subcategoryIds } = deriveFromTopicGroups(values.topicGroups);
 
+  // 기존 관계 데이터 삭제 (에러 무시)
   await Promise.all([
     q.from("speaker_subcategories").delete().eq("speaker_id", speakerId),
     q.from("speaker_topics").delete().eq("speaker_id", speakerId),
@@ -70,7 +71,7 @@ async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFor
     q.from("speaker_careers").delete().eq("speaker_id", speakerId),
   ]);
 
-  const inserts: Promise<unknown>[] = [];
+  const inserts: Promise<{ error: { message: string; code?: string } | null }>[] = [];
 
   if (subcategoryIds.length > 0) {
     inserts.push(
@@ -94,7 +95,16 @@ async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFor
       }))
   );
   if (topicRows.length > 0) {
-    inserts.push(q.from("speaker_topics").insert(topicRows));
+    // speaker_topics는 에러를 직접 확인 (테이블 미생성 감지)
+    const { error: topicErr } = await q.from("speaker_topics").insert(topicRows);
+    if (topicErr) {
+      const msg = (topicErr as { message: string; code?: string }).message ?? "";
+      const code = (topicErr as { code?: string }).code ?? "";
+      if (code === "42P01" || msg.includes("does not exist")) {
+        return "speaker_topics 테이블이 없습니다. Supabase SQL Editor에서 migration.sql 4번 항목을 실행해 주세요.";
+      }
+      return `주제 저장 오류: ${msg}`;
+    }
   }
 
   const videoRows = values.videos
@@ -132,6 +142,7 @@ async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFor
   if (careerRows.length > 0) inserts.push(q.from("speaker_careers").insert(careerRows));
 
   await Promise.all(inserts);
+  return null;
 }
 
 // REQ-2: speaker_private upsert
@@ -200,10 +211,11 @@ export async function createSpeaker(values: SpeakerFormValues): Promise<{ error?
 
   if (error) return { error: (error as { message: string }).message };
 
-  await Promise.all([
+  const [syncErr] = await Promise.all([
     syncRelations(sb, values.id, values),
     syncPrivate(sb, values.id, values),
   ]);
+  if (syncErr) return { error: syncErr };
 
   revalidatePath("/admin/speakers");
   revalidatePath("/");
@@ -248,10 +260,11 @@ export async function updateSpeaker(
 
   if (error) return { error: (error as { message: string }).message };
 
-  await Promise.all([
+  const [syncErr] = await Promise.all([
     syncRelations(sb, id, values),
     syncPrivate(sb, id, values),
   ]);
+  if (syncErr) return { error: syncErr };
 
   revalidatePath("/admin/speakers");
   revalidatePath(`/speakers/${id}`);
