@@ -59,6 +59,14 @@ export interface SpeakerSubcategory {
   subcategory_id: string;
 }
 
+export interface SpeakerTopic {
+  id: string;
+  speaker_id: string;
+  subcategory_id: string | null;
+  topic_text: string;
+  sort_order: number;
+}
+
 // REQ-4: media_type 추가
 export interface SpeakerVideo {
   id: string;
@@ -175,6 +183,7 @@ export interface Database {
       subcategories:         TableDef<Subcategory>;
       speakers:              TableDef<Speaker>;
       speaker_subcategories: TableDef<SpeakerSubcategory>;
+      speaker_topics:        TableDef<SpeakerTopic>;
       speaker_videos:        TableDef<SpeakerVideo>;
       speaker_reviews:       TableDef<SpeakerReview>;
       speaker_careers:       TableDef<SpeakerCareer>;

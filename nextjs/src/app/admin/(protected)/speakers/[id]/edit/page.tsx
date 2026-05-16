@@ -1,12 +1,39 @@
 import { notFound } from "next/navigation";
-import { getSpeakerWithPrivate, getCategoriesWithSubs, getSpeakers } from "@/lib/queries";
+import { getSpeakerWithPrivate, getCategoriesWithSubs, getSpeakers, getSpeakerTopics } from "@/lib/queries";
 import { SpeakerForm } from "../../_form";
-import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
-import type { SpeakerWithPrivate } from "@/lib/database.types";
+import type { SpeakerFormValues, TopicGroup } from "@/app/admin/_actions/speakers";
+import type { SpeakerWithPrivate, SpeakerTopic } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
 
-function toFormValues(s: SpeakerWithPrivate): SpeakerFormValues {
+function buildTopicGroups(
+  topicRows: SpeakerTopic[],
+  subcategoryIds: string[],
+  flatTopics: string[]
+): TopicGroup[] {
+  if (topicRows.length > 0) {
+    const map = new Map<string, TopicGroup>();
+    for (const row of topicRows) {
+      const key = row.subcategory_id ?? "__null__";
+      if (!map.has(key)) {
+        map.set(key, { subcategoryId: row.subcategory_id, topics: [] });
+      }
+      map.get(key)!.topics.push(row.topic_text);
+    }
+    return [...map.values()];
+  }
+  // 기존 데이터 폴백: subcategoryIds를 빈 그룹으로, topics를 기타 그룹으로
+  const result: TopicGroup[] = subcategoryIds.map((subId) => ({
+    subcategoryId: subId,
+    topics: [],
+  }));
+  if (flatTopics.length > 0) {
+    result.push({ subcategoryId: null, topics: [...flatTopics] });
+  }
+  return result;
+}
+
+function toFormValues(s: SpeakerWithPrivate, topicRows: SpeakerTopic[]): SpeakerFormValues {
   return {
     id: s.id,
     name: s.name,
@@ -22,8 +49,7 @@ function toFormValues(s: SpeakerWithPrivate): SpeakerFormValues {
     stats_companies: s.stats_companies,
     stats_years: s.stats_years,
     bio: s.bio,
-    topics: s.topics,
-    subcategory_ids: s.subcategory_ids,
+    topicGroups: buildTopicGroups(topicRows, s.subcategory_ids, s.topics),
     recommended_ids: s.recommended_ids,
     careers: s.careers.map((c) => ({ year: c.year, role: c.role })),
     videos: s.videos.map((v) => ({
@@ -53,10 +79,11 @@ interface Props {
 export default async function EditSpeakerPage({ params }: Props) {
   const { id } = await params;
 
-  const [speaker, categoriesWithSubs, allSpeakers] = await Promise.all([
+  const [speaker, categoriesWithSubs, allSpeakers, topicRows] = await Promise.all([
     getSpeakerWithPrivate(id),
     getCategoriesWithSubs(),
     getSpeakers(),
+    getSpeakerTopics(id),
   ]);
 
   if (!speaker) notFound();
@@ -64,7 +91,7 @@ export default async function EditSpeakerPage({ params }: Props) {
   return (
     <SpeakerForm
       mode="edit"
-      defaultValues={toFormValues(speaker)}
+      defaultValues={toFormValues(speaker, topicRows)}
       categoriesWithSubs={categoriesWithSubs}
       allSpeakers={allSpeakers}
       speakerCode={speaker.private?.speaker_code ?? null}

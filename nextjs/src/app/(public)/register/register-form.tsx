@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ChangeEvent } from "react";
 import type { CategoryWithSubs } from "@/lib/database.types";
 import { publicRegisterSpeaker, type PublicRegisterValues } from "@/app/admin/_actions/register";
+import type { TopicGroup } from "@/app/admin/_actions/speakers";
 import { uploadPublicRegistrationFile } from "@/app/admin/_actions/upload";
 import { Icon } from "@/components/icon";
 
@@ -55,19 +56,13 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
   const [statsCompanies, setStatsCompanies] = useState("");
   const [statsYears, setStatsYears] = useState("");
   const [bio, setBio] = useState<string[]>([""]);
-  const [topics, setTopics] = useState<string[]>([""]);
-  const [subcategoryIds, setSubcategoryIds] = useState<string[]>([]);
+  const [topicGroups, setTopicGroups] = useState<TopicGroup[]>([]);
   const [careers, setCareers] = useState<{ year: string; role: string }[]>([{ year: "", role: "" }]);
 
   const [mediaFiles, setMediaFiles] = useState<UploadedDoc[]>([]);
   const [lectureFiles, setLectureFiles] = useState<UploadedDoc[]>([]);
   const [careerCert, setCareerCert] = useState<UploadedDoc | null>(null);
   const [eduCert, setEduCert] = useState<UploadedDoc | null>(null);
-
-  const toggleSub = (id: string) =>
-    setSubcategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
 
   const handleFileChange = async (
     key: "portrait" | "lecture_material" | "career_cert" | "edu_cert" | "media",
@@ -129,8 +124,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
       stats_companies: parseInt(statsCompanies) || 0,
       stats_years: parseInt(statsYears) || 0,
       bio: bio.filter(Boolean),
-      topics: topics.filter(Boolean),
-      subcategory_ids: subcategoryIds,
+      topicGroups,
       careers: careers.filter((c) => c.year && c.role),
       media_files: mediaFiles,
       lecture_files: lectureFiles,
@@ -437,28 +431,16 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
               <button type="button" onClick={() => setBio([...bio, ""])} style={addBtn}>+ 단락 추가</button>
             </FormSection>
 
-            {/* 강연 주제 */}
-            <FormSection title="강연 주제">
-              {topics.map((t, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  <input
-                    value={t}
-                    onChange={(e) => {
-                      const next = [...topics];
-                      next[i] = e.target.value;
-                      setTopics(next);
-                    }}
-                    placeholder="예: 리더십과 조직문화 혁신"
-                    style={{ ...field, flex: 1 }}
-                  />
-                  {topics.length > 1 && (
-                    <button type="button" onClick={() => setTopics(topics.filter((_, j) => j !== i))} style={removeBtn}>
-                      <Icon name="close" size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button type="button" onClick={() => setTopics([...topics, ""])} style={addBtn}>+ 주제 추가</button>
+            {/* 전문 분야 & 강연 주제 (통합) */}
+            <FormSection title="전문 분야 & 강연 주제">
+              <PublicTopicGroupEditor
+                topicGroups={topicGroups}
+                setTopicGroups={setTopicGroups}
+                categoriesWithSubs={categoriesWithSubs}
+                field={field}
+                addBtn={addBtn}
+                removeBtn={removeBtn}
+              />
             </FormSection>
 
             {/* 경력 */}
@@ -508,41 +490,6 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
                   <input type="number" min="0" value={statsYears} onChange={(e) => setStatsYears(e.target.value)} placeholder="15" style={field} />
                 </FormField>
               </Grid>
-            </FormSection>
-
-            {/* 전문 분야 */}
-            <FormSection title="전문 분야">
-              {categoriesWithSubs.map((cat) => (
-                <div key={cat.id} style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                    {cat.label}
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {cat.subcategories.map((sub) => {
-                      const checked = subcategoryIds.includes(sub.id);
-                      return (
-                        <label
-                          key={sub.id}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 6,
-                            padding: "6px 14px",
-                            background: checked ? "var(--accent-soft, #e6f4f2)" : "var(--surface)",
-                            border: `1px solid ${checked ? "var(--accent)" : "var(--line)"}`,
-                            borderRadius: 100,
-                            fontSize: 13,
-                            color: checked ? "var(--accent)" : "var(--ink-soft)",
-                            cursor: "pointer",
-                            userSelect: "none",
-                          }}
-                        >
-                          <input type="checkbox" checked={checked} onChange={() => toggleSub(sub.id)} style={{ display: "none" }} />
-                          {sub.label}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
             </FormSection>
 
             {/* 미디어 자료 */}
@@ -769,3 +716,122 @@ const addBtn: React.CSSProperties = {
   border: "1px dashed var(--accent)", borderRadius: 4,
   padding: "8px 14px", cursor: "pointer", marginTop: 4,
 };
+
+function PublicTopicGroupEditor({
+  topicGroups,
+  setTopicGroups,
+  categoriesWithSubs,
+  field,
+  addBtn: addBtnStyle,
+  removeBtn: removeBtnStyle,
+}: {
+  topicGroups: TopicGroup[];
+  setTopicGroups: (groups: TopicGroup[]) => void;
+  categoriesWithSubs: CategoryWithSubs[];
+  field: React.CSSProperties;
+  addBtn: React.CSSProperties;
+  removeBtn: React.CSSProperties;
+}) {
+  const usedSubIds = topicGroups
+    .filter((g) => g.subcategoryId !== null)
+    .map((g) => g.subcategoryId!);
+
+  return (
+    <>
+      {topicGroups.map((group, gi) => {
+        const otherUsedSubIds = usedSubIds.filter((id) => id !== group.subcategoryId);
+        return (
+          <div
+            key={gi}
+            style={{
+              marginBottom: 16,
+              padding: 16,
+              border: "1px solid var(--line)",
+              borderRadius: 6,
+              background: "var(--surface)",
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+              <select
+                value={group.subcategoryId ?? "__null__"}
+                onChange={(e) => {
+                  const next = [...topicGroups];
+                  next[gi] = { ...group, subcategoryId: e.target.value === "__null__" ? null : e.target.value };
+                  setTopicGroups(next);
+                }}
+                style={{ ...field, flex: 1 }}
+              >
+                <option value="__null__">기타 (분야 미분류)</option>
+                {categoriesWithSubs.map((cat) => (
+                  <optgroup key={cat.id} label={cat.label}>
+                    {cat.subcategories.map((sub) => (
+                      <option key={sub.id} value={sub.id} disabled={otherUsedSubIds.includes(sub.id)}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setTopicGroups(topicGroups.filter((_, i) => i !== gi))}
+                style={removeBtnStyle}
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+            <div style={{ paddingLeft: 12, borderLeft: "2px solid var(--line)" }}>
+              {group.topics.map((t, ti) => (
+                <div key={ti} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <input
+                    value={t}
+                    onChange={(e) => {
+                      const next = [...topicGroups];
+                      const tArr = [...next[gi].topics];
+                      tArr[ti] = e.target.value;
+                      next[gi] = { ...next[gi], topics: tArr };
+                      setTopicGroups(next);
+                    }}
+                    placeholder="예: 리더십과 조직문화 혁신"
+                    style={{ ...field, flex: 1 }}
+                  />
+                  {group.topics.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...topicGroups];
+                        next[gi] = { ...group, topics: group.topics.filter((_, i) => i !== ti) };
+                        setTopicGroups(next);
+                      }}
+                      style={removeBtnStyle}
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = [...topicGroups];
+                  next[gi] = { ...group, topics: [...group.topics, ""] };
+                  setTopicGroups(next);
+                }}
+                style={addBtnStyle}
+              >
+                + 주제 추가
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => setTopicGroups([...topicGroups, { subcategoryId: null, topics: [""] }])}
+        style={addBtnStyle}
+      >
+        + 전문 분야 추가
+      </button>
+    </>
+  );
+}

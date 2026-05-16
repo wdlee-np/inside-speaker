@@ -6,6 +6,7 @@ import type {
   SpeakerReview,
   SpeakerCareer,
   SpeakerSubcategory,
+  SpeakerTopic,
   SpeakerWithRelations,
   SpeakerPrivate,
   SpeakerFile,
@@ -376,6 +377,17 @@ export const getSpeakerFiles = cache(async (speakerId: string): Promise<SpeakerF
     .eq("speaker_id", speakerId)
     .order("sort_order");
   return (data ?? []) as SpeakerFile[];
+});
+
+export const getSpeakerTopics = cache(async (speakerId: string): Promise<SpeakerTopic[]> => {
+  if (isDev()) return [];
+  const supabase = await createClient();
+  const { data } = await (supabase as any)
+    .from("speaker_topics")
+    .select("*")
+    .eq("speaker_id", speakerId)
+    .order("sort_order");
+  return (data ?? []) as SpeakerTopic[];
 });
 
 export const getSpeakerWithPrivate = cache(async (id: string): Promise<SpeakerWithPrivate | null> => {

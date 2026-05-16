@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { generateSpeakerCode } from "@/lib/queries";
+import type { TopicGroup } from "@/app/admin/_actions/speakers";
 
 const isDev = () =>
   (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
@@ -20,8 +21,7 @@ export type PublicRegisterValues = {
   stats_companies: number;
   stats_years: number;
   bio: string[];
-  topics: string[];
-  subcategory_ids: string[];
+  topicGroups: TopicGroup[];
   careers: { year: string; role: string }[];
   media_files: { path: string; name: string; size: number }[];
   lecture_files: { path: string; name: string; size: number }[];
@@ -42,6 +42,13 @@ export async function publicRegisterSpeaker(
   const q = sb as any;
   const id = generateId();
 
+  const flatTopics = values.topicGroups.flatMap((g) => g.topics.filter(Boolean));
+  const subcategoryIds = [
+    ...new Set(
+      values.topicGroups.filter((g) => g.subcategoryId).map((g) => g.subcategoryId!)
+    ),
+  ];
+
   const { error } = await q.from("speakers").insert({
     id,
     name: values.name,
@@ -57,7 +64,7 @@ export async function publicRegisterSpeaker(
     stats_companies: values.stats_companies || 0,
     stats_years: values.stats_years || 0,
     bio: values.bio.filter(Boolean),
-    topics: values.topics.filter(Boolean),
+    topics: flatTopics,
     recommended_ids: [],
     speaker_status: "등록요청",
   });
@@ -83,13 +90,27 @@ export async function publicRegisterSpeaker(
     }));
   }
 
-  if (values.subcategory_ids.length > 0) {
+  if (subcategoryIds.length > 0) {
     await q.from("speaker_subcategories").insert(
-      values.subcategory_ids.map((subId: string) => ({
+      subcategoryIds.map((subId: string) => ({
         speaker_id: id,
         subcategory_id: subId,
       }))
     );
+  }
+
+  const topicRows = values.topicGroups.flatMap((g, gi) =>
+    g.topics
+      .filter(Boolean)
+      .map((t, ti) => ({
+        speaker_id: id,
+        subcategory_id: g.subcategoryId ?? null,
+        topic_text: t,
+        sort_order: gi * 100 + ti,
+      }))
+  );
+  if (topicRows.length > 0) {
+    await q.from("speaker_topics").insert(topicRows);
   }
 
   const careerRows = values.careers

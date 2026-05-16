@@ -10,6 +10,11 @@ const isDev = () =>
 
 const DEV_ERROR = "개발 모드에서는 저장이 지원되지 않습니다.";
 
+export type TopicGroup = {
+  subcategoryId: string | null;
+  topics: string[];
+};
+
 export type SpeakerFormValues = {
   id: string;
   name: string;
@@ -25,8 +30,7 @@ export type SpeakerFormValues = {
   stats_companies: number;
   stats_years: number;
   bio: string[];
-  topics: string[];
-  subcategory_ids: string[];
+  topicGroups: TopicGroup[];
   recommended_ids: string[];
   careers: { year: string; role: string }[];
   videos: { title: string; duration: string; video_url: string; thumb_url: string; media_type: "video" | "audio" | "youtube" }[];
@@ -42,12 +46,25 @@ export type SpeakerFormValues = {
 
 type SbClient = Awaited<ReturnType<typeof createClient>>;
 
+function deriveFromTopicGroups(topicGroups: TopicGroup[]) {
+  const flatTopics = topicGroups.flatMap((g) => g.topics.filter(Boolean));
+  const subcategoryIds = [
+    ...new Set(
+      topicGroups.filter((g) => g.subcategoryId).map((g) => g.subcategoryId!)
+    ),
+  ];
+  return { flatTopics, subcategoryIds };
+}
+
 async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFormValues) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const q = sb as any;
 
+  const { subcategoryIds } = deriveFromTopicGroups(values.topicGroups);
+
   await Promise.all([
     q.from("speaker_subcategories").delete().eq("speaker_id", speakerId),
+    q.from("speaker_topics").delete().eq("speaker_id", speakerId),
     q.from("speaker_videos").delete().eq("speaker_id", speakerId),
     q.from("speaker_reviews").delete().eq("speaker_id", speakerId),
     q.from("speaker_careers").delete().eq("speaker_id", speakerId),
@@ -55,15 +72,29 @@ async function syncRelations(sb: SbClient, speakerId: string, values: SpeakerFor
 
   const inserts: Promise<unknown>[] = [];
 
-  if (values.subcategory_ids.length > 0) {
+  if (subcategoryIds.length > 0) {
     inserts.push(
       q.from("speaker_subcategories").insert(
-        values.subcategory_ids.map((subId: string) => ({
+        subcategoryIds.map((subId: string) => ({
           speaker_id: speakerId,
           subcategory_id: subId,
         }))
       )
     );
+  }
+
+  const topicRows = values.topicGroups.flatMap((g, gi) =>
+    g.topics
+      .filter(Boolean)
+      .map((t, ti) => ({
+        speaker_id: speakerId,
+        subcategory_id: g.subcategoryId ?? null,
+        topic_text: t,
+        sort_order: gi * 100 + ti,
+      }))
+  );
+  if (topicRows.length > 0) {
+    inserts.push(q.from("speaker_topics").insert(topicRows));
   }
 
   const videoRows = values.videos
@@ -145,6 +176,8 @@ export async function createSpeaker(values: SpeakerFormValues): Promise<{ error?
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const q = sb as any;
 
+  const { flatTopics } = deriveFromTopicGroups(values.topicGroups);
+
   const { error } = await q.from("speakers").insert({
     id: values.id,
     name: values.name,
@@ -160,7 +193,7 @@ export async function createSpeaker(values: SpeakerFormValues): Promise<{ error?
     stats_companies: values.stats_companies,
     stats_years: values.stats_years,
     bio: values.bio.filter(Boolean),
-    topics: values.topics.filter(Boolean),
+    topics: flatTopics,
     recommended_ids: values.recommended_ids,
     speaker_status: values.speaker_status || "미노출",
   });
@@ -188,6 +221,8 @@ export async function updateSpeaker(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const q = sb as any;
 
+  const { flatTopics } = deriveFromTopicGroups(values.topicGroups);
+
   const { error } = await q
     .from("speakers")
     .update({
@@ -204,7 +239,7 @@ export async function updateSpeaker(
       stats_companies: values.stats_companies,
       stats_years: values.stats_years,
       bio: values.bio.filter(Boolean),
-      topics: values.topics.filter(Boolean),
+      topics: flatTopics,
       recommended_ids: values.recommended_ids,
       speaker_status: values.speaker_status,
       updated_at: new Date().toISOString(),

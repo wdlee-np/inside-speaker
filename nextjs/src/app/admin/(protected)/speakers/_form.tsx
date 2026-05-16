@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSpeaker, updateSpeaker, deleteSpeakerFile } from "@/app/admin/_actions/speakers";
 import { uploadSpeakerImage, uploadSpeakerFile, getFileSignedUrl } from "@/app/admin/_actions/upload";
-import type { SpeakerFormValues } from "@/app/admin/_actions/speakers";
+import type { SpeakerFormValues, TopicGroup } from "@/app/admin/_actions/speakers";
 import type { CategoryWithSubs, Speaker, SpeakerFile, SpeakerFileType } from "@/lib/database.types";
 import { Icon } from "@/components/icon";
 
 type ScalarFields = Omit<
   SpeakerFormValues,
-  "bio" | "topics" | "subcategory_ids" | "recommended_ids" | "careers" | "videos" | "reviews"
+  "bio" | "topicGroups" | "recommended_ids" | "careers" | "videos" | "reviews"
 >;
 
 interface Props {
@@ -68,10 +68,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const [bio, setBio] = useState<string[]>(
     defaultValues.bio.length ? defaultValues.bio : [""]
   );
-  const [topics, setTopics] = useState<string[]>(
-    defaultValues.topics.length ? defaultValues.topics : [""]
-  );
-  const [subcategoryIds, setSubcategoryIds] = useState<string[]>(defaultValues.subcategory_ids);
+  const [topicGroups, setTopicGroups] = useState<TopicGroup[]>(defaultValues.topicGroups);
   const [recommendedIds, setRecommendedIds] = useState<string[]>(defaultValues.recommended_ids);
   const [careers, setCareers] = useState(
     defaultValues.careers.length ? defaultValues.careers : [{ year: "", role: "" }]
@@ -86,8 +83,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
       const values: SpeakerFormValues = {
         ...scalars,
         bio: bio.filter(Boolean),
-        topics: topics.filter(Boolean),
-        subcategory_ids: subcategoryIds,
+        topicGroups,
         recommended_ids: recommendedIds,
         careers,
         videos,
@@ -457,86 +453,16 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           </button>
         </Section>
 
-        {/* 강연 주제 */}
-        <Section title="강연 주제">
-          {topics.map((t, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-              <input
-                value={t}
-                onChange={(e) => {
-                  const next = [...topics];
-                  next[i] = e.target.value;
-                  setTopics(next);
-                }}
-                placeholder="강연 주제를 입력하세요"
-                style={{ ...inp(), flex: 1 }}
-              />
-              {topics.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setTopics(topics.filter((_, j) => j !== i))}
-                  style={removeBtn}
-                >
-                  <Icon name="close" size={14} />
-                </button>
-              )}
-            </div>
-          ))}
-          <button type="button" onClick={() => setTopics([...topics, ""])} style={addBtn}>
-            + 주제 추가
-          </button>
-        </Section>
-
-        {/* 카테고리 */}
-        <Section title="카테고리">
-          {categoriesWithSubs.map((cat) => (
-            <div key={cat.id} style={{ marginBottom: 16 }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--color-ink-muted)",
-                  marginBottom: 8,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {cat.label}
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {cat.subcategories.map((sub) => {
-                  const checked = subcategoryIds.includes(sub.id);
-                  return (
-                    <label
-                      key={sub.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "6px 14px",
-                        background: checked ? "var(--color-accent-soft)" : "var(--color-bg)",
-                        border: `1px solid ${checked ? "var(--color-accent)" : "var(--color-line)"}`,
-                        borderRadius: 100,
-                        fontSize: 12,
-                        color: checked ? "var(--color-accent)" : "var(--color-ink-soft)",
-                        cursor: "pointer",
-                        userSelect: "none",
-                        transition: "all 120ms",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleArrayId(subcategoryIds, setSubcategoryIds, sub.id)}
-                        style={{ display: "none" }}
-                      />
-                      {sub.label}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+        {/* 전문 분야 & 강연 주제 */}
+        <Section title="전문 분야 & 강연 주제">
+          <AdminTopicGroupEditor
+            topicGroups={topicGroups}
+            setTopicGroups={setTopicGroups}
+            categoriesWithSubs={categoriesWithSubs}
+            inp={inp}
+            addBtn={addBtn}
+            removeBtn={removeBtn}
+          />
         </Section>
 
         {/* 추천 강사 */}
@@ -1257,5 +1183,130 @@ function FileSection({
         )}
       </div>
     </div>
+  );
+}
+
+// ── AdminTopicGroupEditor ─────────────────────────────────────────────────────
+
+function AdminTopicGroupEditor({
+  topicGroups,
+  setTopicGroups,
+  categoriesWithSubs,
+  inp,
+  addBtn,
+  removeBtn,
+}: {
+  topicGroups: TopicGroup[];
+  setTopicGroups: (groups: TopicGroup[]) => void;
+  categoriesWithSubs: CategoryWithSubs[];
+  inp: () => React.CSSProperties;
+  addBtn: React.CSSProperties;
+  removeBtn: React.CSSProperties;
+}) {
+  const usedSubIds = topicGroups
+    .filter((g) => g.subcategoryId !== null)
+    .map((g) => g.subcategoryId!);
+
+  return (
+    <>
+      {topicGroups.map((group, gi) => {
+        const otherUsedSubIds = usedSubIds.filter((id) => id !== group.subcategoryId);
+        return (
+          <div
+            key={gi}
+            style={{
+              marginBottom: 16,
+              padding: "16px",
+              border: "1px solid var(--color-line)",
+              borderRadius: 6,
+              background: "var(--color-bg)",
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
+              <select
+                value={group.subcategoryId ?? "__null__"}
+                onChange={(e) => {
+                  const next = [...topicGroups];
+                  next[gi] = { ...group, subcategoryId: e.target.value === "__null__" ? null : e.target.value };
+                  setTopicGroups(next);
+                }}
+                style={{ ...inp(), flex: 1 }}
+              >
+                <option value="__null__">기타 (분야 미분류)</option>
+                {categoriesWithSubs.map((cat) => (
+                  <optgroup key={cat.id} label={cat.label}>
+                    {cat.subcategories.map((sub) => (
+                      <option
+                        key={sub.id}
+                        value={sub.id}
+                        disabled={otherUsedSubIds.includes(sub.id)}
+                      >
+                        {sub.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setTopicGroups(topicGroups.filter((_, i) => i !== gi))}
+                style={removeBtn}
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+            <div style={{ paddingLeft: 12, borderLeft: "2px solid var(--color-line)" }}>
+              {group.topics.map((t, ti) => (
+                <div key={ti} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <input
+                    value={t}
+                    onChange={(e) => {
+                      const next = [...topicGroups];
+                      const tArr = [...next[gi].topics];
+                      tArr[ti] = e.target.value;
+                      next[gi] = { ...next[gi], topics: tArr };
+                      setTopicGroups(next);
+                    }}
+                    placeholder="강연 주제를 입력하세요"
+                    style={{ ...inp(), flex: 1 }}
+                  />
+                  {group.topics.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...topicGroups];
+                        next[gi] = { ...group, topics: group.topics.filter((_, i) => i !== ti) };
+                        setTopicGroups(next);
+                      }}
+                      style={removeBtn}
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = [...topicGroups];
+                  next[gi] = { ...group, topics: [...group.topics, ""] };
+                  setTopicGroups(next);
+                }}
+                style={addBtn}
+              >
+                + 주제 추가
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => setTopicGroups([...topicGroups, { subcategoryId: null, topics: [""] }])}
+        style={addBtn}
+      >
+        + 전문 분야 추가
+      </button>
+    </>
   );
 }
