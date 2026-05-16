@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSpeaker, updateSpeaker, deleteSpeakerFile } from "@/app/admin/_actions/speakers";
-import { uploadSpeakerImage, uploadSpeakerFile, getFileSignedUrl } from "@/app/admin/_actions/upload";
+import { getSignedUploadUrl, saveSpeakerFileRecord, getFileSignedUrl } from "@/app/admin/_actions/upload";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { SpeakerFormValues, TopicGroup } from "@/app/admin/_actions/speakers";
 import type { CategoryWithSubs, Speaker, SpeakerFile, SpeakerFileType } from "@/lib/database.types";
 import { Icon } from "@/components/icon";
@@ -115,11 +116,12 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const handlePortraitUpload = async (file: File) => {
     setPortraitUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const result = await uploadSpeakerImage(fd);
-      if (result.error) toast.error(result.error);
-      else setValue("portrait_url", result.url!);
+      const signed = await getSignedUploadUrl("speaker-images", file.name, "images");
+      if (signed.error) { toast.error(signed.error); return; }
+      const sb = createBrowserClient();
+      const { error } = await sb.storage.from("speaker-images").uploadToSignedUrl(signed.path!, signed.token!, file, { contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      setValue("portrait_url", signed.publicUrl!);
     } finally {
       setPortraitUploading(false);
     }
@@ -128,27 +130,26 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const handleFileUpload = async (file: File, fileType: SpeakerFileType) => {
     setFileUploading((prev) => ({ ...prev, [fileType]: true }));
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const result = await uploadSpeakerFile(defaultValues.id, fileType, fd);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("파일이 업로드되었습니다.");
-        // reload files list — optimistic update with placeholder
-        setFiles((prev) => [
-          ...prev,
-          {
-            id: `temp-${Date.now()}`,
-            speaker_id: defaultValues.id,
-            file_type: fileType,
-            file_url: "",
-            file_name: file.name,
-            file_size: file.size,
-            sort_order: prev.filter((f) => f.file_type === fileType).length,
-          } as SpeakerFile,
-        ]);
-      }
+      const signed = await getSignedUploadUrl("speaker-docs", file.name, `${defaultValues.id}/${fileType}`);
+      if (signed.error) { toast.error(signed.error); return; }
+      const sb = createBrowserClient();
+      const { error } = await sb.storage.from("speaker-docs").uploadToSignedUrl(signed.path!, signed.token!, file, { contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      const saveResult = await saveSpeakerFileRecord(defaultValues.id, fileType, signed.publicUrl!, file.name, file.size);
+      if (saveResult.error) { toast.error(saveResult.error); return; }
+      toast.success("파일이 업로드되었습니다.");
+      setFiles((prev) => [
+        ...prev,
+        {
+          id: `temp-${Date.now()}`,
+          speaker_id: defaultValues.id,
+          file_type: fileType,
+          file_url: signed.publicUrl!,
+          file_name: file.name,
+          file_size: file.size,
+          sort_order: prev.filter((f) => f.file_type === fileType).length,
+        } as SpeakerFile,
+      ]);
     } finally {
       setFileUploading((prev) => ({ ...prev, [fileType]: false }));
     }
@@ -166,15 +167,14 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
   const handleThumbUpload = async (file: File, videoIndex: number) => {
     setVideoThumbUploading((prev) => ({ ...prev, [videoIndex]: true }));
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const result = await uploadSpeakerImage(fd);
-      if (result.error) toast.error(result.error);
-      else {
-        const next = [...videos];
-        next[videoIndex] = { ...next[videoIndex], thumb_url: result.url! };
-        setVideos(next);
-      }
+      const signed = await getSignedUploadUrl("speaker-images", file.name, "images");
+      if (signed.error) { toast.error(signed.error); return; }
+      const sb = createBrowserClient();
+      const { error } = await sb.storage.from("speaker-images").uploadToSignedUrl(signed.path!, signed.token!, file, { contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      const next = [...videos];
+      next[videoIndex] = { ...next[videoIndex], thumb_url: signed.publicUrl! };
+      setVideos(next);
     } finally {
       setVideoThumbUploading((prev) => ({ ...prev, [videoIndex]: false }));
     }

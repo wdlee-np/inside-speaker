@@ -4,7 +4,8 @@ import { useState, type FormEvent, type ChangeEvent } from "react";
 import type { CategoryWithSubs } from "@/lib/database.types";
 import { publicRegisterSpeaker, type PublicRegisterValues } from "@/app/admin/_actions/register";
 import type { TopicGroup } from "@/app/admin/_actions/speakers";
-import { uploadPublicRegistrationFile } from "@/app/admin/_actions/upload";
+import { getSignedUploadUrl } from "@/app/admin/_actions/upload";
+import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/icon";
 
 interface Props {
@@ -77,33 +78,42 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
       return;
     }
 
-    if (key === "media" && file.size > MAX_MEDIA_BYTES) {
+    if (key === "portrait" && file.size > 5 * 1024 * 1024) {
+      setError("이미지 크기는 5MB 이하여야 합니다.");
+      return;
+    }
+
+    if (key !== "portrait" && file.size > MAX_MEDIA_BYTES) {
       setError("파일 크기가 10MB를 초과합니다. 대용량 파일은 contact@insidecompany.co.kr 로 이메일 문의 주세요.");
       return;
     }
 
     setError(null);
     setUploadingKey(key);
-    const fd = new FormData();
-    fd.append("file", file);
-    const result = await uploadPublicRegistrationFile(key === "media" ? "media" : key, fd);
-    setUploadingKey(null);
 
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
+    try {
+      const bucket = key === "portrait" ? "speaker-images" : "speaker-docs";
+      const folder = key === "portrait" ? "images" : `reg/${key}`;
+      const signed = await getSignedUploadUrl(bucket, file.name, folder);
+      if (signed.error) { setError(signed.error); return; }
 
-    if (key === "portrait") {
-      setPortraitUrl(result.url!);
-    } else if (key === "lecture_material") {
-      setLectureFiles((prev) => [...prev, { path: result.path!, name: result.name!, size: result.size! }]);
-    } else if (key === "career_cert") {
-      setCareerCert({ path: result.path!, name: result.name!, size: result.size! });
-    } else if (key === "edu_cert") {
-      setEduCert({ path: result.path!, name: result.name!, size: result.size! });
-    } else if (key === "media") {
-      setMediaFiles((prev) => [...prev, { path: result.path!, name: result.name!, size: result.size! }]);
+      const sb = createBrowserClient();
+      const { error } = await sb.storage.from(bucket).uploadToSignedUrl(signed.path!, signed.token!, file, { contentType: file.type });
+      if (error) { setError(error.message); return; }
+
+      if (key === "portrait") {
+        setPortraitUrl(signed.publicUrl!);
+      } else if (key === "lecture_material") {
+        setLectureFiles((prev) => [...prev, { path: signed.path!, name: file.name, size: file.size }]);
+      } else if (key === "career_cert") {
+        setCareerCert({ path: signed.path!, name: file.name, size: file.size });
+      } else if (key === "edu_cert") {
+        setEduCert({ path: signed.path!, name: file.name, size: file.size });
+      } else if (key === "media") {
+        setMediaFiles((prev) => [...prev, { path: signed.path!, name: file.name, size: file.size }]);
+      }
+    } finally {
+      setUploadingKey(null);
     }
   };
 

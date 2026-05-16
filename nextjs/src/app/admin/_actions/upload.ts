@@ -3,60 +3,45 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { SpeakerFileType } from "@/lib/database.types";
 
-const BUCKET = "speaker-images";
-const FOLDER = "images";
+const DOC_BUCKET = "speaker-docs";
 
 const isDev = () =>
   (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").includes("placeholder");
 
-export async function uploadSpeakerImage(
-  formData: FormData
-): Promise<{ url?: string; error?: string }> {
+export async function getSignedUploadUrl(
+  bucket: "speaker-images" | "speaker-docs",
+  fileName: string,
+  folder: string
+): Promise<{ signedUrl?: string; token?: string; path?: string; publicUrl?: string; error?: string }> {
   if (isDev()) return { error: "개발 모드에서는 업로드가 지원되지 않습니다." };
 
-  const file = formData.get("file") as File | null;
-  if (!file) return { error: "파일이 없습니다." };
-  if (!file.type.startsWith("image/")) return { error: "이미지 파일만 업로드 가능합니다." };
+  const sb = await createAdminClient();
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "bin";
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const filename = `${FOLDER}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-  const sb = await createClient();
-  const { error } = await sb.storage
-    .from(BUCKET)
-    .upload(filename, file, { contentType: file.type, upsert: false });
-
+  const { data, error } = await sb.storage.from(bucket).createSignedUploadUrl(path);
   if (error) return { error: error.message };
 
-  const { data } = sb.storage.from(BUCKET).getPublicUrl(filename);
-  return { url: data.publicUrl };
+  const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
+
+  return {
+    signedUrl: data.signedUrl,
+    token: data.token,
+    path,
+    publicUrl: urlData.publicUrl,
+  };
 }
 
-const DOC_BUCKET = "speaker-docs";
-const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
-
-export async function uploadSpeakerFile(
+export async function saveSpeakerFileRecord(
   speakerId: string,
   fileType: SpeakerFileType,
-  formData: FormData
+  fileUrl: string,
+  fileName: string,
+  fileSize: number
 ): Promise<{ error?: string }> {
-  if (isDev()) return { error: "개발 모드에서는 업로드가 지원되지 않습니다." };
-
-  const file = formData.get("file") as File | null;
-  if (!file) return { error: "파일이 없습니다." };
-  if (file.size > MAX_FILE_BYTES) return { error: "파일 크기는 10MB 이하여야 합니다." };
-
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-  const filename = `${speakerId}/${fileType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  if (isDev()) return { error: "개발 모드에서는 지원되지 않습니다." };
 
   const sb = await createClient();
-  const { error: storageError } = await sb.storage
-    .from(DOC_BUCKET)
-    .upload(filename, file, { contentType: file.type, upsert: false });
-
-  if (storageError) return { error: storageError.message };
-
-  const { data: urlData } = sb.storage.from(DOC_BUCKET).getPublicUrl(filename);
 
   const { data: existing } = await (sb as any)
     .from("speaker_files")
@@ -67,16 +52,16 @@ export async function uploadSpeakerFile(
 
   const count = (existing ?? []).length;
 
-  const { error: dbError } = await (sb as any).from("speaker_files").insert({
+  const { error } = await (sb as any).from("speaker_files").insert({
     speaker_id: speakerId,
     file_type: fileType,
-    file_url: urlData.publicUrl,
-    file_name: file.name,
-    file_size: file.size,
+    file_url: fileUrl,
+    file_name: fileName,
+    file_size: fileSize,
     sort_order: count,
   });
 
-  if (dbError) return { error: dbError.message };
+  if (error) return { error: (error as { message: string }).message };
   return {};
 }
 
@@ -90,7 +75,6 @@ export async function getFileSignedUrl(
   let path: string;
 
   if (fileUrl.startsWith("http")) {
-    // 풀 URL에서 버킷 내 경로 추출
     const marker = `/storage/v1/object/public/${DOC_BUCKET}/`;
     if (fileUrl.includes(marker)) {
       path = fileUrl.split(marker)[1];
@@ -105,44 +89,12 @@ export async function getFileSignedUrl(
       }
     }
   } else {
-    // 이미 상대 경로 (공개 등록 업로드 파일)
     path = fileUrl;
   }
 
-  // 쿼리스트링 제거 후 URL 디코딩
   path = decodeURIComponent(path.split("?")[0]);
 
   const { data, error } = await sb.storage.from(DOC_BUCKET).createSignedUrl(path, 120);
   if (error) return { error: error.message };
   return { url: data.signedUrl };
-}
-
-export async function uploadPublicRegistrationFile(
-  fileType: "portrait" | SpeakerFileType,
-  formData: FormData
-): Promise<{ url?: string; path?: string; name?: string; size?: number; error?: string }> {
-  if (isDev()) return { error: "개발 모드에서는 업로드가 지원되지 않습니다." };
-
-  const file = formData.get("file") as File | null;
-  if (!file) return { error: "파일이 없습니다." };
-
-  const sb = await createAdminClient();
-
-  if (fileType === "portrait") {
-    if (!file.type.startsWith("image/")) return { error: "이미지 파일만 업로드 가능합니다." };
-    if (file.size > 5 * 1024 * 1024) return { error: "이미지 크기는 5MB 이하여야 합니다." };
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const filename = `${FOLDER}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await sb.storage.from(BUCKET).upload(filename, file, { contentType: file.type, upsert: false });
-    if (error) return { error: error.message };
-    const { data } = sb.storage.from(BUCKET).getPublicUrl(filename);
-    return { url: data.publicUrl };
-  } else {
-    if (file.size > MAX_FILE_BYTES) return { error: "파일 크기는 10MB 이하여야 합니다." };
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-    const filename = `reg/${fileType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await sb.storage.from(DOC_BUCKET).upload(filename, file, { contentType: file.type, upsert: false });
-    if (error) return { error: error.message };
-    return { path: filename, name: file.name, size: file.size };
-  }
 }
