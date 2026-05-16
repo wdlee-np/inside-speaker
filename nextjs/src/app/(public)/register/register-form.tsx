@@ -20,14 +20,14 @@ type UploadingKey = "portrait" | "lecture_material" | "career_cert" | "edu_cert"
 
 const FEE_OPTIONS = [
   { value: "", label: "선택해 주세요" },
-  { value: "5만원", label: "5만원" },
-  { value: "10만원", label: "10만원" },
-  { value: "20만원", label: "20만원" },
-  { value: "30만원", label: "30만원" },
-  { value: "40만원", label: "40만원" },
-  { value: "50만원", label: "50만원" },
-  { value: "70만원", label: "70만원" },
-  { value: "100만원 이상", label: "100만원 이상" },
+  { value: "시간당 5만원 이상", label: "시간당 5만원 이상" },
+  { value: "시간당 10만원 이상", label: "시간당 10만원 이상" },
+  { value: "시간당 20만원 이상", label: "시간당 20만원 이상" },
+  { value: "시간당 30만원 이상", label: "시간당 30만원 이상" },
+  { value: "시간당 40만원 이상", label: "시간당 40만원 이상" },
+  { value: "시간당 50만원 이상", label: "시간당 50만원 이상" },
+  { value: "시간당 70만원 이상", label: "시간당 70만원 이상" },
+  { value: "시간당 100만원 이상", label: "시간당 100만원 이상" },
   { value: "제한 없음", label: "제한 없음" },
 ];
 
@@ -203,8 +203,7 @@ export function RegisterForm({ categoriesWithSubs }: Props) {
               증명서를 첨부하지 않으셨습니다
             </h3>
             <p style={{ fontSize: 14, color: "var(--ink-muted)", lineHeight: 1.7, margin: "0 0 28px" }}>
-              경력증명서 또는 학력증명서가 없으면 강사 노출 심사에서 불이익이 있을 수 있습니다.
-              증명서 없이 등록 신청을 진행하시겠습니까?
+              강사 노출을 위해서 추후 필수 제출해야하며 미등록시 담당자가 검토 후 필요시 연락드릴 예정입니다.
             </p>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button

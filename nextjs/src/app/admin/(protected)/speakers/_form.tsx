@@ -808,6 +808,22 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
           >
             + 미디어 추가
           </button>
+          {mode === "edit" && (
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--color-line)" }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-ink-muted)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                업로드된 미디어 파일
+              </div>
+              <FileSection
+                label="미디어 파일 (최대 20개)"
+                fileType="media"
+                maxCount={20}
+                files={files.filter((f) => f.file_type === "media")}
+                uploading={!!fileUploading.media}
+                onUpload={(file) => handleFileUpload(file, "media")}
+                onDelete={handleFileDelete}
+              />
+            </div>
+          )}
         </Section>
 
         {/* 후기 */}
@@ -907,14 +923,14 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
             <Field label="희망 강의료">
               <select {...register("desired_fee")} style={inp()}>
                 <option value="">선택</option>
-                <option value="5만원">5만원</option>
-                <option value="10만원">10만원</option>
-                <option value="20만원">20만원</option>
-                <option value="30만원">30만원</option>
-                <option value="40만원">40만원</option>
-                <option value="50만원">50만원</option>
-                <option value="70만원">70만원</option>
-                <option value="100만원 이상">100만원 이상</option>
+                <option value="시간당 5만원 이상">시간당 5만원 이상</option>
+                <option value="시간당 10만원 이상">시간당 10만원 이상</option>
+                <option value="시간당 20만원 이상">시간당 20만원 이상</option>
+                <option value="시간당 30만원 이상">시간당 30만원 이상</option>
+                <option value="시간당 40만원 이상">시간당 40만원 이상</option>
+                <option value="시간당 50만원 이상">시간당 50만원 이상</option>
+                <option value="시간당 70만원 이상">시간당 70만원 이상</option>
+                <option value="시간당 100만원 이상">시간당 100만원 이상</option>
                 <option value="제한 없음">제한 없음</option>
               </select>
             </Field>
@@ -959,15 +975,6 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 files={files.filter((f) => f.file_type === "edu_cert")}
                 uploading={!!fileUploading.edu_cert}
                 onUpload={(file) => handleFileUpload(file, "edu_cert")}
-                onDelete={handleFileDelete}
-              />
-              <FileSection
-                label="미디어 자료 (어드민 전용)"
-                fileType="media"
-                maxCount={20}
-                files={files.filter((f) => f.file_type === "media")}
-                uploading={!!fileUploading.media}
-                onUpload={(file) => handleFileUpload(file, "media")}
                 onDelete={handleFileDelete}
               />
             </div>

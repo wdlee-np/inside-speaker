@@ -85,7 +85,7 @@ export function InquiryDrawer() {
               <strong>{speaker.name}</strong> · {speaker.title} 강사 문의
             </div>
           )}
-          <InquiryForm speakerId={speaker?.id} onSubmitted={() => setTimeout(closeInquiry, 1600)} />
+          <InquiryForm speakerId={speaker?.id} open={open} onSubmitted={() => setTimeout(closeInquiry, 1600)} />
         </div>
       </aside>
     </>
@@ -122,10 +122,12 @@ interface FormState {
 function InquiryForm({
   speakerId,
   compact = false,
+  open,
   onSubmitted,
 }: {
   speakerId?: string;
   compact?: boolean;
+  open?: boolean;
   onSubmitted?: () => void;
 }) {
   const [form, setForm] = useState<FormState>({
@@ -133,6 +135,10 @@ function InquiryForm({
     eventDate: "", eventTime: "", region: "", audience: "", budget: "", topic: "", message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (open) setSubmitted(false);
+  }, [open]);
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));

@@ -192,6 +192,8 @@ export function InquiryTable({ inquiries, speakerMap }: Props) {
             );
           })()}
           {selected.desired_date && <DetailRow label="희망 일자" value={selected.desired_date} />}
+          {selected.desired_time && <DetailRow label="희망 시각" value={selected.desired_time} />}
+          {selected.region && <DetailRow label="강의 지역" value={selected.region} />}
           {selected.budget_range && (
             <DetailRow label="예산" value={BUDGET_LABELS[selected.budget_range] ?? selected.budget_range} />
           )}
