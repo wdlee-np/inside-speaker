@@ -53,6 +53,7 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
       phone: defaultValues.phone ?? "",
       email: defaultValues.email ?? "",
       admin_memo: defaultValues.admin_memo ?? "",
+      desired_fee: defaultValues.desired_fee ?? "",
     },
   });
 
@@ -903,6 +904,20 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 </div>
               </Field>
             )}
+            <Field label="희망 강의료">
+              <select {...register("desired_fee")} style={inp()}>
+                <option value="">선택</option>
+                <option value="5만원">5만원</option>
+                <option value="10만원">10만원</option>
+                <option value="20만원">20만원</option>
+                <option value="30만원">30만원</option>
+                <option value="40만원">40만원</option>
+                <option value="50만원">50만원</option>
+                <option value="70만원">70만원</option>
+                <option value="100만원 이상">100만원 이상</option>
+                <option value="제한 없음">제한 없음</option>
+              </select>
+            </Field>
             <Field label="어드민 메모" span={2}>
               <textarea
                 {...register("admin_memo")}
@@ -944,6 +959,15 @@ export function SpeakerForm({ mode, defaultValues, categoriesWithSubs, allSpeake
                 files={files.filter((f) => f.file_type === "edu_cert")}
                 uploading={!!fileUploading.edu_cert}
                 onUpload={(file) => handleFileUpload(file, "edu_cert")}
+                onDelete={handleFileDelete}
+              />
+              <FileSection
+                label="미디어 자료 (어드민 전용)"
+                fileType="media"
+                maxCount={20}
+                files={files.filter((f) => f.file_type === "media")}
+                uploading={!!fileUploading.media}
+                onUpload={(file) => handleFileUpload(file, "media")}
                 onDelete={handleFileDelete}
               />
             </div>

@@ -15,6 +15,7 @@ export type PublicRegisterValues = {
   portrait_url: string;
   phone: string;
   email: string;
+  desired_fee: string;
   stats_talks: number;
   stats_companies: number;
   stats_years: number;
@@ -22,7 +23,7 @@ export type PublicRegisterValues = {
   topics: string[];
   subcategory_ids: string[];
   careers: { year: string; role: string }[];
-  videos: { title: string; video_url: string; media_type: "video" | "audio" | "youtube" }[];
+  media_files: { path: string; name: string; size: number }[];
   lecture_files: { path: string; name: string; size: number }[];
   career_cert: { path: string; name: string; size: number } | null;
   edu_cert: { path: string; name: string; size: number } | null;
@@ -69,6 +70,7 @@ export async function publicRegisterSpeaker(
     speaker_code: speakerCode,
     phone: values.phone || null,
     email: values.email || null,
+    desired_fee: values.desired_fee || null,
   };
   let { error: privateError } = await q.from("speaker_private").insert(privatePayload);
 
@@ -102,19 +104,6 @@ export async function publicRegisterSpeaker(
     await q.from("speaker_careers").insert(careerRows);
   }
 
-  const videoRows = values.videos
-    .filter((v) => v.video_url && v.title)
-    .map((v, i) => ({
-      speaker_id: id,
-      title: v.title,
-      video_url: v.video_url,
-      media_type: v.media_type,
-      sort_order: i,
-    }));
-  if (videoRows.length > 0) {
-    await q.from("speaker_videos").insert(videoRows);
-  }
-
   type FileRow = {
     speaker_id: string;
     file_type: string;
@@ -124,6 +113,14 @@ export async function publicRegisterSpeaker(
     sort_order: number;
   };
   const fileRows: FileRow[] = [
+    ...values.media_files.map((f, i) => ({
+      speaker_id: id,
+      file_type: "media",
+      file_url: f.path,
+      file_name: f.name,
+      file_size: f.size,
+      sort_order: i,
+    })),
     ...values.lecture_files.map((f, i) => ({
       speaker_id: id,
       file_type: "lecture_material",

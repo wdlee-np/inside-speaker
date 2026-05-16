@@ -92,6 +92,18 @@ export function InquiryDrawer() {
   );
 }
 
+const REGION_OPTIONS = [
+  "서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "제주",
+  "기타 지역", "미정",
+];
+
+const TIME_OPTIONS = [
+  "07시", "08시", "09시", "10시", "11시", "12시",
+  "13시", "14시", "15시", "16시", "17시", "18시",
+  "19시", "20시", "21시", "22시", "23시",
+  "종일", "미정",
+];
+
 interface FormState {
   company: string;
   department: string;
@@ -99,6 +111,8 @@ interface FormState {
   email: string;
   phone: string;
   eventDate: string;
+  eventTime: string;
+  region: string;
   audience: string;
   budget: string;
   topic: string;
@@ -116,7 +130,7 @@ function InquiryForm({
 }) {
   const [form, setForm] = useState<FormState>({
     company: "", department: "", name: "", email: "", phone: "",
-    eventDate: "", audience: "", budget: "", topic: "", message: "",
+    eventDate: "", eventTime: "", region: "", audience: "", budget: "", topic: "", message: "",
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -187,8 +201,24 @@ function InquiryForm({
         <FormField label="연락처" labelStyle={labelStyle}>
           <input value={form.phone} onChange={set("phone")} placeholder="010-0000-0000" style={fieldStyle} />
         </FormField>
+        <FormField label="강의 지역" labelStyle={labelStyle}>
+          <select value={form.region} onChange={set("region")} style={{ ...fieldStyle, appearance: "none" }}>
+            <option value="">선택해 주세요</option>
+            {REGION_OPTIONS.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </FormField>
         <FormField label="희망 일정" labelStyle={labelStyle}>
           <input type="date" value={form.eventDate} onChange={set("eventDate")} style={fieldStyle} />
+        </FormField>
+        <FormField label="희망 시각" labelStyle={labelStyle}>
+          <select value={form.eventTime} onChange={set("eventTime")} style={{ ...fieldStyle, appearance: "none" }}>
+            <option value="">선택해 주세요</option>
+            {TIME_OPTIONS.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </FormField>
         <FormField label="예상 인원" labelStyle={labelStyle}>
           <input value={form.audience} onChange={set("audience")} placeholder="120명" style={fieldStyle} />

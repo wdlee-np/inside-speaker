@@ -42,6 +42,7 @@ function toFormValues(s: SpeakerWithPrivate): SpeakerFormValues {
     phone: s.private?.phone ?? "",
     email: s.private?.email ?? "",
     admin_memo: s.private?.admin_memo ?? "",
+    desired_fee: s.private?.desired_fee ?? "",
   };
 }
 

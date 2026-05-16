@@ -37,6 +37,7 @@ export type SpeakerFormValues = {
   phone: string;
   email: string;
   admin_memo: string;
+  desired_fee: string;
 };
 
 type SbClient = Awaited<ReturnType<typeof createClient>>;
@@ -120,6 +121,7 @@ async function syncPrivate(sb: SbClient, speakerId: string, values: SpeakerFormV
     phone: values.phone || null,
     email: values.email || null,
     admin_memo: values.admin_memo || null,
+    desired_fee: values.desired_fee || null,
     updated_at: new Date().toISOString(),
   };
 

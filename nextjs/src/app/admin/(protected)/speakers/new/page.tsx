@@ -29,6 +29,7 @@ const EMPTY: SpeakerFormValues = {
   phone: "",
   email: "",
   admin_memo: "",
+  desired_fee: "",
 };
 
 export default async function NewSpeakerPage() {

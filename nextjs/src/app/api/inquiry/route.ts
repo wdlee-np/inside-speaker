@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const {
     company, department, name, email, phone,
-    eventDate, budget, topic, audience, message, speakerId,
+    eventDate, eventTime, region, budget, topic, audience, message, speakerId,
   } = body as Record<string, string | undefined>;
 
   if (!company || !name || !email) {
@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
     phone: phone || "",
     desired_speaker: speakerId || null,
     desired_date: eventDate || null,
+    desired_time: eventTime || null,
+    region: region || null,
     budget_range: budget || null,
     message: fullMessage,
     status: "new",
@@ -66,7 +68,9 @@ export async function POST(req: NextRequest) {
         row("담당자", name),
         row("이메일", email),
         row("연락처", phone || "-"),
+        row("강의 지역", region || "-"),
         row("희망 일정", eventDate || "-"),
+        row("희망 시각", eventTime || "-"),
         row("예산 구간", budget || "-"),
         row("희망 강사 ID", speakerId || "-"),
         `<tr><td style="padding:6px 12px;border:1px solid #eee;font-weight:600">메시지</td>`,

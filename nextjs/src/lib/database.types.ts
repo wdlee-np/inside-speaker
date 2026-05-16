@@ -95,12 +95,13 @@ export interface SpeakerPrivate {
   phone: string | null;
   email: string | null;
   admin_memo: string | null;
+  desired_fee: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// REQ-2: 파일 (강의안·증명서)
-export type SpeakerFileType = "lecture_material" | "career_cert" | "edu_cert";
+// REQ-2: 파일 (강의안·증명서·미디어)
+export type SpeakerFileType = "lecture_material" | "career_cert" | "edu_cert" | "media";
 
 export interface SpeakerFile {
   id: string;
@@ -122,6 +123,8 @@ export interface Inquiry {
   email: string;
   desired_speaker: string | null;
   desired_date: string | null;
+  desired_time: string | null;
+  region: string | null;
   budget_range: string | null;
   message: string | null;
   status: InquiryStatus;
